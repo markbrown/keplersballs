@@ -1,6 +1,11 @@
-const DEV = true;
-
 const TAU = 2 * Math.PI;
+
+// display additional info
+const DEV = false;
+
+// animation
+const TICK_MS = 100;
+const MAX_GAME_TIME_PER_FRAME_MS = 25;
 
 // physical constants
 const GRAVITY_FACTOR = 1e5;
@@ -29,8 +34,54 @@ function World(color = "yellow", radius = 10, path = null) {
     // the sun
     this.color = color;
     this.radius = radius;
+
+    // keep track of game time
+    this.last = Date.now();
+    this.time = 0;
+    this.ticks = 0;
 }
 
+World.prototype.run = function() {
+    this.frame();
+    requestAnimationFrame(() => this.run());
+}
+
+World.prototype.frame = function() {
+    let now = Date.now();
+
+    // limit game speed so we get at least a set number of frames per tick
+    let dt = Math.min(MAX_GAME_TIME_PER_FRAME_MS, now - this.last);
+
+    // go into stasis if we lag more than a tick behind
+    this.last = Math.max(this.last + dt, now - TICK_MS);
+
+    // update the world, stopping to tick if need be
+    let next = this.time + dt;
+    if (next > this.ticks * TICK_MS) {
+        this.update(this.ticks * TICK_MS);
+        this.ticks++;
+        this.tick();
+    }
+    this.update(next);
+    this.draw();
+}
+
+// update the world each animation frame
+World.prototype.update = function(next) {
+    let dt = next - this.time;
+    if (dt <= 0) {
+        return;
+    }
+    this.ship.advance(dt);
+    this.time = next;
+}
+
+// perform actions at regular intervals
+World.prototype.tick = function() {
+    this.ship.tick(this.ticks);
+}
+
+// clear the canvas
 World.prototype.clear = function() {
     this.ctx.fillStyle = "#000";
     this.ctx.fillRect(-this.width / 2, -this.height / 2,
@@ -55,6 +106,14 @@ function Ship(mu, path, heading = Math.PI / 2) {
 
     // determine orbit from the path
     this.orbit = new Orbit(this.mu, path);
+}
+
+Ship.prototype.advance = function(dt) {
+    this.orbit.advance(dt);
+    this.orbit.getPath(this.path);
+}
+
+Ship.prototype.tick = function(ticks) {
 }
 
 Ship.prototype.draw = function(ctx) {
@@ -106,6 +165,12 @@ function Orbit(mu, path) {
     // mean anomaly and mean motion
     this.phi = this.meanAnomaly(path.pos);
     this.omega = Math.sqrt(mu / this.a ** 3);
+}
+
+Orbit.prototype.advance = function(dt) {
+    // advance the mean anomaly
+    this.phi += dt * this.omega / 1000;
+    this.phi %= TAU;
 }
 
 // returns the mean anomaly at a given position
@@ -272,6 +337,6 @@ let sample5 = new Path(Vec(-12, 0), Vec(0, 162));
 
 const w = new World("yellow", 10, sample2);
 
-w.draw();
+w.run();
 
 // vi: set ai sw=4 ts=8 et sts=4 :
