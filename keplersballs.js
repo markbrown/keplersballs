@@ -96,6 +96,59 @@ World.prototype.draw = function(clear = true) {
     this.ship.draw(this.ctx);
 }
 
+// keep track of which keys are currently pressed
+function KeyState() {
+    this.reset();
+    addEventListener("blur", (ev) => this.reset());
+    addEventListener("keydown", (ev) => this.keyevent(ev.code, true));
+    addEventListener("keyup", (ev) => this.keyevent(ev.code, false));
+}
+
+KeyState.prototype.reset = function() {
+    this.forward = false;
+    this.backward = false;
+    this.left = false;
+    this.right = false;
+    this.trigger = false;
+}
+
+KeyState.prototype.keyevent = function(code, val) {
+    switch (code) {
+        case "ArrowUp":
+        case "Numpad8":
+        case "KeyW":
+            this.forward = val;
+            break;
+        case "ArrowDown":
+        case "Numpad2":
+        case "KeyS":
+            this.backward = val;
+            break;
+        case "ArrowLeft":
+        case "Numpad4":
+        case "KeyA":
+            this.left = val;
+            break;
+        case "ArrowRight":
+        case "Numpad6":
+        case "KeyD":
+            this.right = val;
+            break;
+        case "Space":
+        case "Numpad5":
+            this.trigger = val;
+            break;
+    }
+}
+
+KeyState.prototype.draw = function(ctx) {
+    if (this.forward) { Vec(0, 160).spot(ctx, 3, "red"); }
+    if (this.backward) { Vec(0, 120).spot(ctx, 3, "red"); }
+    if (this.left) { Vec(-20, 140).spot(ctx, 3, "red"); }
+    if (this.right) { Vec(20, 140).spot(ctx, 3, "red"); }
+    if (this.trigger) { Vec(0, 140).spot(ctx, 2, "white"); }
+}
+
 function Ship(mu, path, heading = Math.PI / 2) {
     this.color = "lime";
     this.mu = mu;
@@ -106,6 +159,9 @@ function Ship(mu, path, heading = Math.PI / 2) {
 
     // determine orbit from the path
     this.orbit = new Orbit(this.mu, path);
+
+    // controls
+    this.keys = new KeyState();
 }
 
 Ship.prototype.advance = function(dt) {
@@ -118,6 +174,7 @@ Ship.prototype.tick = function(ticks) {
 
 Ship.prototype.draw = function(ctx) {
     DEV && this.path.draw(ctx, "blue");
+    DEV && this.keys.draw(ctx);
     this.orbit.draw(ctx);
     ctx.save();
     ctx.translate(this.path.pos.x, this.path.pos.y);
