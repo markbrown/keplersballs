@@ -1,2 +1,2 @@
-# keplersballs
-Orbital mechanics game
+# Kepler's Balls
+Orbital mechanics game.
