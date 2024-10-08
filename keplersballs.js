@@ -7,9 +7,17 @@ const DEV = false;
 const TICK_MS = 100;
 const MAX_GAME_TIME_PER_FRAME_MS = 25;
 
-// physical and game constants
+// physical constants
 const GRAVITY_FACTOR = 1e5;
 const TURN_RAD_PER_SEC = TAU;
+const THRUST_ACCEL = 10;
+const RETRO_ACCEL = 6;
+
+// put an angle in the range 0..TAU
+function angle(theta) {
+    theta %= TAU;
+    return theta < 0 ? theta + TAU : theta;
+}
 
 function World(color = "yellow", radius = 10, path = null) {
     this.canvas = document.querySelector("#canvas");
@@ -159,10 +167,18 @@ function Ship(mu, path, heading = Math.PI / 2) {
     this.heading = heading;
 
     // determine orbit from the path
-    this.orbit = new Orbit(this.mu, path);
+    this.determineOrbit();
 
     // controls
     this.keys = new KeyState();
+}
+
+Ship.prototype.ahead = function(s = 1) {
+    return Vec.polar(s, this.heading);
+}
+
+Ship.prototype.determineOrbit = function() {
+    this.orbit = new Orbit(this.mu, this.path);
 }
 
 Ship.prototype.advance = function(dt) {
@@ -174,11 +190,24 @@ Ship.prototype.advance = function(dt) {
     if (this.keys.right) {
         this.heading -= turn;
     }
-    this.heading %= TAU;
+    this.heading = angle(this.heading);
+
+    // thrust
+    if (this.keys.forward) {
+        this.thrust(dt * THRUST_ACCEL / 1000);
+    }
+    if (this.keys.backward) {
+        this.thrust(-dt * RETRO_ACCEL / 1000);
+    }
 
     // move ship in orbit
     this.orbit.advance(dt);
     this.orbit.getPath(this.path);
+}
+
+Ship.prototype.thrust = function(dv) {
+    this.path.impulse(this.ahead(dv));
+    this.determineOrbit();
 }
 
 Ship.prototype.tick = function(ticks) {
@@ -234,12 +263,24 @@ function Orbit(mu, path) {
     // mean anomaly and mean motion
     this.phi = this.meanAnomaly(path.pos);
     this.omega = Math.sqrt(mu / this.a ** 3);
+
+    // the orbit position should be the same as what was passed in
+    DEV && this.check(path.pos);
+}
+
+Orbit.prototype.check = function(oldpos) {
+    let newpath = new Path();
+    this.getPath(newpath);
+    let d = newpath.pos.minus(oldpos);
+    if (d.dot(d) > 1) {
+        console.log("pos error " + JSON.stringify(d));
+    }
 }
 
 Orbit.prototype.advance = function(dt) {
     // advance the mean anomaly
     this.phi += dt * this.omega / 1000;
-    this.phi %= TAU;
+    this.phi = angle(this.phi);
 }
 
 // returns the mean anomaly at a given position
@@ -253,25 +294,26 @@ Orbit.prototype.eccentricAnomaly = function(pos) {
     let r = pos.minus(this.center);
     let x = r.dot(this.major) / this.a ** 2;
     let y = r.dot(this.minor) / this.b ** 2;
-    return Math.atan2(y, x);
+    return angle(Math.atan2(y, x));
 }
 
 // convert eccentric anomaly to mean anomaly
 Orbit.prototype.eccentricToMean = function(rho) {
-    return rho - this.e * Math.sin(rho);
+    return angle(rho - this.e * Math.sin(rho));
 }
 
 // convert mean anomaly to eccentric anomaly using Newton's method
-Orbit.prototype.meanToEccentric = function(phi, n = 6) {
-    let rho = phi % TAU;
-    let prev = rho;
-    for (let i = 0; i < n; i++) {
-        prev = rho;
-        rho = phi + this.e * Math.sin(rho);
-    }
-    if (Math.abs(rho - Math.PI) < Math.PI / 2) {
-        // deal with slow convergence near the apoapsis
-        rho = (rho + prev) / 2;
+Orbit.prototype.meanToEccentric = function(phi) {
+    const limit = 30;
+    const epsilon = 1e-4;
+    phi = angle(phi);
+    let count = 0;
+    let rho = (this.e < 0.8) ? phi : Math.PI;
+    let delta = rho - this.e * Math.sin(phi) - phi;
+    while (Math.abs(delta) > epsilon && count < limit) {
+        rho = angle(rho - delta / (1 - this.e * Math.cos(rho)));
+        delta = this.eccentricToMean(rho) - phi;
+        count++;
     }
     return rho;
 }
@@ -299,23 +341,43 @@ Orbit.prototype.getPath = function(path, t = 0) {
 }
 
 Orbit.prototype.draw = function(ctx) {
-    DEV && new Path(this.center, this.major).draw(ctx, "red");
-    DEV && new Path(this.center, this.minor).draw(ctx, "red");
-    DEV && new Path(Vec(), this.major.rotate(this.phi)).draw(ctx, "brown");
+    DEV && this.drawDevInfo(ctx);
 
     // draw points one second apart
     ctx.fillStyle = "rgb(192 192 192 / 50%";
-    let max = TAU / this.omega;
     let path = new Path();
-    for (let t = 0; t < max; t++) {
+    for (let t = TAU / this.omega; t > 0; t--) {
         this.getPath(path, t);
         path.pos.spot(ctx, 1);
     }
 }
 
+Orbit.prototype.drawDevInfo = function(ctx) {
+    new Path(this.center, this.major).draw(ctx, "red");
+    new Path(this.center, this.minor).draw(ctx, "red");
+    new Path(Vec(), this.major.rotate(this.phi)).draw(ctx, "brown");
+
+    let rho = this.meanToEccentric(this.phi);
+    let phi2 = this.eccentricToMean(rho);
+    let rho2 = this.meanToEccentric(phi2);
+
+    this.drawAnomaly(ctx, 1, this.phi, "brown");
+    this.drawAnomaly(ctx, 1, rho, "green");
+    this.drawAnomaly(ctx, 0.8, phi2, "fuchsia");
+    this.drawAnomaly(ctx, 0.8, rho2, "yellow");
+}
+
+Orbit.prototype.drawAnomaly = function(ctx, s, theta, color = null) {
+    new Path(this.center, this.major.rotate(theta).scale(s)).draw(ctx, color);
+}
+
 function Path(pos = Vec(), vel = Vec()) {
     this.pos = pos;
     this.vel = vel;
+}
+
+Path.prototype.impulse = function(dv) {
+    this.vel = this.vel.plus(dv);
 }
 
 Path.prototype.draw = function(ctx, color = null) {
@@ -335,6 +397,10 @@ function Vec(x = 0, y = 0) {
     }
     this.x = x;
     this.y = y;
+}
+
+Vec.polar = function(radius, theta) {
+    return Vec(radius * Math.cos(theta), radius * Math.sin(theta));
 }
 
 Vec.prototype.plus = function(a) {
