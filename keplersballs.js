@@ -3,15 +3,22 @@ const TAU = 2 * Math.PI;
 // display additional info
 const DEV = false;
 
-// animation
-const TICK_MS = 100;
-const MAX_GAME_TIME_PER_FRAME_MS = 25;
-
 // physical constants
 const GRAVITY_FACTOR = 1e5;
 const TURN_RAD_PER_SEC = TAU;
 const THRUST_ACCEL = 10;
 const RETRO_ACCEL = 6;
+
+// visual effects
+const SMOKE_LIFE_MS = 2400;
+const SMOKE_EXPANSION_RATE = 4;
+const SMOKE_FUZZ = 3.5;
+const THRUST_SMOKE_SIZE = 4.5;
+const RETRO_SMOKE_SIZE = 2.5;
+
+// animation
+const TICK_MS = 100;
+const MAX_GAME_TIME_PER_FRAME_MS = 25;
 
 // put an angle in the range 0..TAU
 function angle(theta) {
@@ -43,6 +50,7 @@ function World(color = "yellow", radius = 10, path = null) {
     // the sun
     this.color = color;
     this.radius = radius;
+    this.smokes = [];
 
     // keep track of game time
     this.last = Date.now();
@@ -82,12 +90,20 @@ World.prototype.update = function(next) {
         return;
     }
     this.ship.advance(dt);
+    let smokes1 = [];
+    for (let smoke of this.smokes) {
+        if (smoke.age < SMOKE_LIFE_MS) {
+            smoke.advance(dt);
+            smokes1.push(smoke);
+        }
+    }
+    this.smokes = smokes1;
     this.time = next;
 }
 
 // perform actions at regular intervals
 World.prototype.tick = function() {
-    this.ship.tick(this.ticks);
+    this.ship.tick(this.ticks, this.smokes);
 }
 
 // clear the canvas
@@ -101,8 +117,11 @@ World.prototype.draw = function(clear = true) {
     if (clear) {
         this.clear();
     }
-    Vec().spot(this.ctx, this.radius, this.color);
+    for (let smoke of this.smokes) {
+        smoke.draw(this.ctx);
+    }
     this.ship.draw(this.ctx);
+    Vec().spot(this.ctx, this.radius, this.color);
 }
 
 // keep track of which keys are currently pressed
@@ -210,7 +229,18 @@ Ship.prototype.thrust = function(dv) {
     this.determineOrbit();
 }
 
-Ship.prototype.tick = function(ticks) {
+Ship.prototype.tick = function(ticks, smokes) {
+    if (this.keys.forward && ticks % 2) {
+        let aft = this.path.pos.plus(this.ahead(-5));
+        smokes.push(new Smoke(aft, THRUST_SMOKE_SIZE));
+    }
+    if (this.keys.backward && ticks % 2 == 1) {
+        let ahead = this.ahead();
+        let fore = this.path.pos.plus(ahead.scale(4));
+        let side = ahead.crossZ(3);
+        smokes.push(new Smoke(fore.plus(side), RETRO_SMOKE_SIZE));
+        smokes.push(new Smoke(fore.minus(side), RETRO_SMOKE_SIZE));
+    }
 }
 
 Ship.prototype.draw = function(ctx) {
@@ -228,6 +258,23 @@ Ship.prototype.draw = function(ctx) {
     ctx.lineTo(-4, 4);
     ctx.fill();
     ctx.restore();
+}
+
+function Smoke(pos, radius) {
+    this.pos = pos.plus(Vec.fuzz(SMOKE_FUZZ));
+    this.radius = radius;
+    this.age = 0;
+}
+
+Smoke.prototype.advance = function(dt) {
+    this.age += dt;
+}
+
+Smoke.prototype.draw = function(ctx) {
+    let currentradius = this.radius + this.age * SMOKE_EXPANSION_RATE / 1000;
+    let frac = Math.max(0, 1 - this.age / SMOKE_LIFE_MS);
+    let alpha = 0.5 * frac ** 2;
+    this.pos.spot(ctx, currentradius, `rgb(192 192 192 / ${alpha})`);
 }
 
 function Orbit(mu, path) {
@@ -397,6 +444,10 @@ function Vec(x = 0, y = 0) {
     }
     this.x = x;
     this.y = y;
+}
+
+Vec.fuzz = function(radius) {
+    return Vec.polar(radius * Math.random(), TAU * Math.random());
 }
 
 Vec.polar = function(radius, theta) {
