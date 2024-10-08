@@ -8,6 +8,9 @@ const GRAVITY_FACTOR = 1e5;
 const TURN_RAD_PER_SEC = TAU;
 const THRUST_ACCEL = 10;
 const RETRO_ACCEL = 6;
+const BULLET_LIFE_MS = 1000;
+const MUZZLE_VELOCITY = 200;
+const BULLET_SIZE = 1;
 
 // visual effects
 const SMOKE_LIFE_MS = 2400;
@@ -51,6 +54,7 @@ function World(color = "yellow", radius = 10, path = null) {
     this.color = color;
     this.radius = radius;
     this.smokes = [];
+    this.bullets = [];
 
     // keep track of game time
     this.last = Date.now();
@@ -98,12 +102,20 @@ World.prototype.update = function(next) {
         }
     }
     this.smokes = smokes1;
+    let bullets1 = [];
+    for (let bullet of this.bullets) {
+        if (bullet.age < BULLET_LIFE_MS) {
+            bullet.advance(dt);
+            bullets1.push(bullet);
+        }
+    }
+    this.bullets = bullets1;
     this.time = next;
 }
 
 // perform actions at regular intervals
 World.prototype.tick = function() {
-    this.ship.tick(this.ticks, this.smokes);
+    this.ship.tick(this.ticks, this.smokes, this.bullets);
 }
 
 // clear the canvas
@@ -119,6 +131,9 @@ World.prototype.draw = function(clear = true) {
     }
     for (let smoke of this.smokes) {
         smoke.draw(this.ctx);
+    }
+    for (let bullet of this.bullets) {
+        bullet.draw(this.ctx);
     }
     this.ship.draw(this.ctx);
     Vec().spot(this.ctx, this.radius, this.color);
@@ -229,7 +244,7 @@ Ship.prototype.thrust = function(dv) {
     this.determineOrbit();
 }
 
-Ship.prototype.tick = function(ticks, smokes) {
+Ship.prototype.tick = function(ticks, smokes, bullets) {
     if (this.keys.forward && ticks % 2) {
         let aft = this.path.pos.plus(this.ahead(-5));
         smokes.push(new Smoke(aft, THRUST_SMOKE_SIZE));
@@ -240,6 +255,9 @@ Ship.prototype.tick = function(ticks, smokes) {
         let side = ahead.crossZ(3);
         smokes.push(new Smoke(fore.plus(side), RETRO_SMOKE_SIZE));
         smokes.push(new Smoke(fore.minus(side), RETRO_SMOKE_SIZE));
+    }
+    if (this.keys.trigger) {
+        bullets.push(new Bullet(this.path, this.heading));
     }
 }
 
@@ -275,6 +293,24 @@ Smoke.prototype.draw = function(ctx) {
     let frac = Math.max(0, 1 - this.age / SMOKE_LIFE_MS);
     let alpha = 0.5 * frac ** 2;
     this.pos.spot(ctx, currentradius, `rgb(192 192 192 / ${alpha})`);
+}
+
+function Bullet(path, heading) {
+    this.path = path.copy();
+    this.path.impulse(Vec.polar(MUZZLE_VELOCITY, heading));
+    this.age = 0;
+}
+
+Bullet.prototype.advance = function(dt) {
+    this.age += dt;
+}
+
+Bullet.prototype.position = function() {
+    return this.path.position(this.age);
+}
+
+Bullet.prototype.draw = function(ctx) {
+    this.position().spot(ctx, BULLET_SIZE, "#fff");
 }
 
 function Orbit(mu, path) {
@@ -421,6 +457,14 @@ Orbit.prototype.drawAnomaly = function(ctx, s, theta, color = null) {
 function Path(pos = Vec(), vel = Vec()) {
     this.pos = pos;
     this.vel = vel;
+}
+
+Path.prototype.copy = function() {
+    return new Path(this.pos, this.vel);
+}
+
+Path.prototype.position = function(t = 0) {
+    return this.pos.plus(this.vel.scale(t / 1000));
 }
 
 Path.prototype.impulse = function(dv) {
