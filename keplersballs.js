@@ -7,8 +7,9 @@ const DEV = false;
 const TICK_MS = 100;
 const MAX_GAME_TIME_PER_FRAME_MS = 25;
 
-// physical constants
+// physical and game constants
 const GRAVITY_FACTOR = 1e5;
+const TURN_RAD_PER_SEC = TAU;
 
 function World(color = "yellow", radius = 10, path = null) {
     this.canvas = document.querySelector("#canvas");
@@ -165,6 +166,17 @@ function Ship(mu, path, heading = Math.PI / 2) {
 }
 
 Ship.prototype.advance = function(dt) {
+    // steering
+    let turn = dt * TURN_RAD_PER_SEC / 1000;
+    if (this.keys.left) {
+        this.heading += turn;
+    }
+    if (this.keys.right) {
+        this.heading -= turn;
+    }
+    this.heading %= TAU;
+
+    // move ship in orbit
     this.orbit.advance(dt);
     this.orbit.getPath(this.path);
 }
