@@ -12,9 +12,14 @@ const RETRO_ACCEL = 6;
 const BULLET_LIFE_MS = 1000;
 const BULLET_SIZE = 1;
 const MUZZLE_VELOCITY = 200;
+
+// roids
 const ROID_SIZE_FACTOR = 8;
 const ROID_SPEED_LOSS_FACTOR = 0.7;
 const ROID_SPEED_FUZZ_FACTOR = 0.2;
+const ROID_MIN_HP = 2;
+const ROID_SIZE_HP = 2;
+const ROID_VAR_HP = 6;
 
 // visual effects
 const ORBIT_MARKER_SIZE = 2;
@@ -46,6 +51,10 @@ function World(color = "yellow", radius = 10, path = null) {
     this.ctx = this.canvas.getContext("2d");
     this.ctx.translate(this.width / 2, this.height / 2);
     this.ctx.scale(1, -1);
+
+    // center text
+    this.ctx.textAlign = "center";
+    this.ctx.textBaseline = "middle";
 
     // gravitational parameter
     this.mu = radius * GRAVITY_FACTOR;
@@ -392,6 +401,8 @@ function Roid(mu, size, path) {
     this.size = size;
     this.path = path.copy();
     this.orbit = new Orbit(mu, this.path);
+    let min = ROID_MIN_HP + this.size * ROID_SIZE_HP;
+    this.hp = min + Math.floor(Math.random() * ROID_VAR_HP);
 }
 
 Roid.prototype.sizeInPx = function() {
@@ -410,9 +421,13 @@ Roid.prototype.hit = function(pos, radius = 0) {
     return r.sqr() < (this.sizeInPx() + radius) ** 2;
 }
 
-// split a roid and add any remnants to the given list
+// take a bullet hit
 Roid.prototype.smash = function(roids) {
-    if (this.size > 1) {
+    if (this.hp > 1) {
+        this.hp--;
+        // keep this roid
+        roids.push(this);
+    } else if (this.size > 1) {
         let mu = this.orbit.mu;
         let size = this.size - 1;
         let pos = this.path.pos;
@@ -421,13 +436,16 @@ Roid.prototype.smash = function(roids) {
         let fuzz = this.path.vel.len() * ROID_SPEED_FUZZ_FACTOR;
         let path1 = new Path(pos.plus(side), vel.plus(Vec.fuzz(fuzz)));
         let path2 = new Path(pos.minus(side), vel.plus(Vec.fuzz(fuzz)));
+        // keep the remnants
         roids.push(new Roid(mu, size, path1));
         roids.push(new Roid(mu, size, path2));
     }
 }
 
 Roid.prototype.draw = function(ctx) {
-    this.path.pos.spot(ctx, this.sizeInPx(), this.color);
+    let size = this.sizeInPx();
+    this.path.pos.spot(ctx, size, this.color);
+    this.path.pos.write(ctx, this.hp, size * 1.4, "#fff");
 }
 
 function Orbit(mu, path) {
@@ -722,6 +740,18 @@ Vec.prototype.spot = function(ctx, radius, color = null) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, radius, 0, TAU);
     ctx.fill();
+}
+
+Vec.prototype.write = function(ctx, text, size, color = null) {
+    ctx.save();
+    if (color) {
+        ctx.fillStyle = color;
+    }
+    ctx.font = "" + Math.floor(size) + "px sans-serif";
+    ctx.translate(this.x, this.y);
+    ctx.scale(1, -1);
+    ctx.fillText(text, 0, size / 16);
+    ctx.restore();
 }
 
 // tests
