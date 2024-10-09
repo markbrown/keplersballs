@@ -10,7 +10,7 @@ const THRUST_ACCEL = 10;
 const RETRO_ACCEL = 6;
 const BULLET_LIFE_MS = 1000;
 const MUZZLE_VELOCITY = 200;
-const BULLET_SIZE = 1;
+const ROID_SIZE_FACTOR = 8;
 
 // visual effects
 const SMOKE_LIFE_MS = 2400;
@@ -18,6 +18,7 @@ const SMOKE_EXPANSION_RATE = 4;
 const SMOKE_FUZZ = 3.5;
 const THRUST_SMOKE_SIZE = 4.5;
 const RETRO_SMOKE_SIZE = 2.5;
+const BULLET_SIZE = 1;
 
 // animation
 const TICK_MS = 100;
@@ -42,24 +43,47 @@ function World(color = "yellow", radius = 10, path = null) {
     // gravitational parameter
     this.mu = radius * GRAVITY_FACTOR;
 
-    // place ship in circular orbit by default
-    if (!path) {
-        let p = radius * 10;
-        let v = Math.sqrt(this.mu / p);
-        path = new Path(Vec(p, 0), Vec(0, v));
-    }
-    this.ship = new Ship(this.mu, path);
-
     // the sun
     this.color = color;
     this.radius = radius;
+
+    // the ship will be added during setup
+    this.ship = null;
+
+    // other objects
     this.smokes = [];
     this.bullets = [];
+    this.roids = [];
+
+    this.setup(path);
 
     // keep track of game time
     this.last = Date.now();
     this.time = 0;
     this.ticks = 0;
+}
+
+World.prototype.setup = function(path) {
+    // place ship in circular orbit by default
+    if (!path) {
+        path = this.circularPath(this.radius * 10);
+    }
+    this.ship = new Ship(this.mu, path);
+
+    // add a roid
+    this.addRoid();
+}
+
+World.prototype.circularPath = function(radius, phi = 0) {
+    let speed = Math.sqrt(this.mu / radius);
+    let pos = Vec.polar(radius, phi);
+    let vel = Vec.polar(speed, phi + TAU / 4);
+    return new Path(pos, vel);
+}
+
+World.prototype.addRoid = function() {
+    let path = this.circularPath(this.width * 0.4);
+    this.roids.push(new Roid(this.mu, 3, path));
 }
 
 World.prototype.run = function() {
@@ -94,6 +118,9 @@ World.prototype.update = function(next) {
         return;
     }
     this.ship.advance(dt);
+    for (let roid of this.roids) {
+        roid.advance(dt);
+    }
     let smokes1 = [];
     for (let smoke of this.smokes) {
         if (smoke.age < SMOKE_LIFE_MS) {
@@ -136,6 +163,9 @@ World.prototype.draw = function(clear = true) {
         bullet.draw(this.ctx);
     }
     this.ship.draw(this.ctx);
+    for (let roid of this.roids) {
+        roid.draw(this.ctx);
+    }
     Vec().spot(this.ctx, this.radius, this.color);
 }
 
@@ -192,7 +222,7 @@ KeyState.prototype.draw = function(ctx) {
     if (this.trigger) { Vec(0, 140).spot(ctx, 2, "white"); }
 }
 
-function Ship(mu, path, heading = Math.PI / 2) {
+function Ship(mu, path, heading = TAU / 4) {
     this.color = "lime";
     this.mu = mu;
 
@@ -278,39 +308,20 @@ Ship.prototype.draw = function(ctx) {
     ctx.restore();
 }
 
-function Smoke(pos, radius) {
-    this.pos = pos.plus(Vec.fuzz(SMOKE_FUZZ));
-    this.radius = radius;
-    this.age = 0;
-}
-
-Smoke.prototype.advance = function(dt) {
-    this.age += dt;
-}
-
-Smoke.prototype.draw = function(ctx) {
-    let currentradius = this.radius + this.age * SMOKE_EXPANSION_RATE / 1000;
-    let frac = Math.max(0, 1 - this.age / SMOKE_LIFE_MS);
-    let alpha = 0.5 * frac ** 2;
-    this.pos.spot(ctx, currentradius, `rgb(192 192 192 / ${alpha})`);
-}
-
-function Bullet(path, heading) {
+function Roid(mu, size, path) {
+    this.color = "#840";
+    this.size = size;
     this.path = path.copy();
-    this.path.impulse(Vec.polar(MUZZLE_VELOCITY, heading));
-    this.age = 0;
+    this.orbit = new Orbit(mu, this.path);
 }
 
-Bullet.prototype.advance = function(dt) {
-    this.age += dt;
+Roid.prototype.advance = function(dt) {
+    this.orbit.advance(dt);
 }
 
-Bullet.prototype.position = function() {
-    return this.path.position(this.age);
-}
-
-Bullet.prototype.draw = function(ctx) {
-    this.position().spot(ctx, BULLET_SIZE, "#fff");
+Roid.prototype.draw = function(ctx) {
+    this.orbit.getPath(this.path);
+    this.path.pos.spot(ctx, this.size * ROID_SIZE_FACTOR, this.color);
 }
 
 function Orbit(mu, path) {
@@ -391,7 +402,7 @@ Orbit.prototype.meanToEccentric = function(phi) {
     const epsilon = 1e-4;
     phi = angle(phi);
     let count = 0;
-    let rho = (this.e < 0.8) ? phi : Math.PI;
+    let rho = (this.e < 0.8) ? phi : TAU / 2;
     let delta = rho - this.e * Math.sin(phi) - phi;
     while (Math.abs(delta) > epsilon && count < limit) {
         rho = angle(rho - delta / (1 - this.e * Math.cos(rho)));
@@ -452,6 +463,41 @@ Orbit.prototype.drawDevInfo = function(ctx) {
 
 Orbit.prototype.drawAnomaly = function(ctx, s, theta, color = null) {
     new Path(this.center, this.major.rotate(theta).scale(s)).draw(ctx, color);
+}
+
+function Smoke(pos, radius) {
+    this.pos = pos.plus(Vec.fuzz(SMOKE_FUZZ));
+    this.radius = radius;
+    this.age = 0;
+}
+
+Smoke.prototype.advance = function(dt) {
+    this.age += dt;
+}
+
+Smoke.prototype.draw = function(ctx) {
+    let currentradius = this.radius + this.age * SMOKE_EXPANSION_RATE / 1000;
+    let frac = Math.max(0, 1 - this.age / SMOKE_LIFE_MS);
+    let alpha = 0.5 * frac ** 2;
+    this.pos.spot(ctx, currentradius, `rgb(192 192 192 / ${alpha})`);
+}
+
+function Bullet(path, heading) {
+    this.path = path.copy();
+    this.path.impulse(Vec.polar(MUZZLE_VELOCITY, heading));
+    this.age = 0;
+}
+
+Bullet.prototype.advance = function(dt) {
+    this.age += dt;
+}
+
+Bullet.prototype.position = function() {
+    return this.path.position(this.age);
+}
+
+Bullet.prototype.draw = function(ctx) {
+    this.position().spot(ctx, BULLET_SIZE, "#fff");
 }
 
 function Path(pos = Vec(), vel = Vec()) {
@@ -565,7 +611,9 @@ let sample3 = new Path(Vec(0, -120), Vec(20, 20));
 let sample4 = new Path(Vec(100, -80), Vec(30, 20));
 let sample5 = new Path(Vec(-12, 0), Vec(0, 162));
 
-const w = new World("yellow", 10, sample2);
+// const w = new World("yellow", 10, sample2);
+
+const w = new World();
 
 w.run();
 
