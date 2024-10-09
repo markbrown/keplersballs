@@ -121,7 +121,7 @@ World.prototype.update = function(next) {
     if (dt <= 0) {
         return;
     }
-    this.ship.advance(dt);
+    this.ship && this.ship.advance(dt);
     for (let roid of this.roids) {
         roid.advance(dt);
     }
@@ -146,11 +146,18 @@ World.prototype.update = function(next) {
 }
 
 World.prototype.detectCollisions = function() {
-    // check for ship hitting a roid
-    for (let roid of this.roids) {
-        let ship = this.ship;
-        if (roid.hit(ship.path.pos, ship.size)) {
-            this.ship.crash();
+    let ship = this.ship;
+    if (ship) {
+        // check for ship hitting the sun
+        if (ship.path.pos.sqr() < this.radius ** 2) {
+            this.ship = null;
+        }
+
+        // check for ship hitting a roid
+        for (let roid of this.roids) {
+            if (roid.hit(ship.path.pos, ship.size)) {
+                ship.crash();
+            }
         }
     }
 
@@ -175,7 +182,7 @@ World.prototype.detectCollisions = function() {
 
 // perform actions at regular intervals
 World.prototype.tick = function() {
-    this.ship.tick(this.ticks, this.smokes, this.bullets);
+    this.ship && this.ship.tick(this.ticks, this.smokes, this.bullets);
 }
 
 // clear the canvas
@@ -195,7 +202,7 @@ World.prototype.draw = function(clear = true) {
     for (let bullet of this.bullets) {
         bullet.draw(this.ctx);
     }
-    this.ship.draw(this.ctx);
+    this.ship && this.ship.draw(this.ctx);
     for (let roid of this.roids) {
         roid.draw(this.ctx);
     }
@@ -379,7 +386,7 @@ Roid.prototype.advance = function(dt) {
 // and that has the given radius
 Roid.prototype.hit = function(pos, radius = 0) {
     let r = pos.minus(this.path.pos);
-    return r.dot(r) < (this.sizeInPx() + radius) ** 2;
+    return r.sqr() < (this.sizeInPx() + radius) ** 2;
 }
 
 // split a roid and add any remnants to the given list
@@ -648,7 +655,11 @@ Vec.prototype.unit = function() {
 }
 
 Vec.prototype.len = function() {
-    return Math.sqrt(this.dot(this));
+    return Math.sqrt(this.sqr());
+}
+
+Vec.prototype.sqr = function() {
+    return this.dot(this);
 }
 
 Vec.prototype.dot = function(a) {
