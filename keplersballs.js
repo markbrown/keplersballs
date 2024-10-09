@@ -3,6 +3,12 @@ const TAU = 2 * Math.PI;
 // display additional info
 const DEV = false;
 
+// messages
+const TITLE_TEXT = "KEPLER'S BALLS";
+const VICTORY_TEXT = "YOU WIN!";
+const PLAY_TEXT = "press any key to play";
+const PLAY_AGAIN_TEXT = "press any key to play again";
+
 // physical constants
 const GRAVITY_FACTOR = 1e5;
 const SHIP_SIZE = 5;
@@ -53,6 +59,9 @@ function World(color = "yellow", radius = 10, path = null) {
     this.ctx.textAlign = "center";
     this.ctx.textBaseline = "middle";
 
+    // game state
+    this.controls = new KeyState();
+
     // gravitational parameter
     this.mu = radius * GRAVITY_FACTOR;
 
@@ -60,31 +69,52 @@ function World(color = "yellow", radius = 10, path = null) {
     this.color = color;
     this.radius = radius;
 
-    // the ship will be added during setup
-    this.ship = null;
+    this.setup(path);
+
+    addEventListener("keydown", (ev) => this.hitkey());
+}
+
+World.prototype.hitkey = function() {
+    if (this.showtitle()) {
+        // start the game
+        this.controls.enabled = true;
+    } else if (!this.running()) {
+        // start a new game
+        this.setup();
+    }
+}
+
+World.prototype.showtitle = function() {
+    return !this.controls.enabled;
+}
+
+World.prototype.running = function() {
+    return this.roids.length > 0 && this.ship && this.ship.alive;
+}
+
+World.prototype.victory = function() {
+    return this.roids.length == 0;
+}
+
+World.prototype.setup = function(path = null) {
+    // place ship in circular orbit by default
+    if (!path) {
+        path = this.circularPath(this.radius * 10);
+    }
+    this.ship = new Ship(this.controls, this.mu, path);
 
     // other objects
     this.smokes = [];
     this.bullets = [];
     this.roids = [];
 
-    this.setup(path);
+    // add a roid
+    this.addRoid();
 
     // keep track of game time
     this.last = Date.now();
     this.time = 0;
     this.ticks = 0;
-}
-
-World.prototype.setup = function(path) {
-    // place ship in circular orbit by default
-    if (!path) {
-        path = this.circularPath(this.radius * 10);
-    }
-    this.ship = new Ship(this.mu, path);
-
-    // add a roid
-    this.addRoid();
 }
 
 World.prototype.circularPath = function(radius, phi = 0) {
@@ -223,10 +253,36 @@ World.prototype.draw = function(clear = true) {
         roid.draw(this.ctx);
     }
     Vec().spot(this.ctx, this.radius, this.color);
+
+    if (this.showtitle()) {
+        this.drawTitle();
+    } else if (!this.running()) {
+        this.drawEndGame();
+    }
+}
+
+World.prototype.drawTitle = function() {
+    let titlefont = "100px sans-serif";
+    Vec(0, this.height / 3).write(this.ctx, TITLE_TEXT, titlefont);
+    let msgfont = "30px sans-serif";
+    Vec(0, -this.height / 3).write(this.ctx, PLAY_TEXT, msgfont);
+}
+
+World.prototype.drawEndGame = function() {
+    let titlefont = "80px sans-serif";
+    let msgfont = "30px sans-serif";
+    if (this.victory()) {
+        Vec(0, this.height / 3).write(this.ctx, VICTORY_TEXT, titlefont);
+        Vec(0, -this.height / 3).write(this.ctx, PLAY_AGAIN_TEXT, msgfont);
+    } else {
+        Vec(0, this.height / 3).write(this.ctx, GAME_OVER_TEXT, titlefont);
+        Vec(0, -this.height / 3).write(this.ctx, PLAY_AGAIN_TEXT, msgfont);
+    }
 }
 
 // keep track of which keys are currently pressed
 function KeyState() {
+    this.enabled = false;
     this.reset();
     addEventListener("blur", (ev) => this.reset());
     addEventListener("keydown", (ev) => this.keyevent(ev.code, true));
@@ -242,6 +298,9 @@ KeyState.prototype.reset = function() {
 }
 
 KeyState.prototype.keyevent = function(code, val) {
+    if (!this.enabled) {
+        return;
+    }
     switch (code) {
         case "ArrowUp":
         case "Numpad8":
@@ -278,23 +337,21 @@ KeyState.prototype.draw = function(ctx) {
     if (this.trigger) { Vec(0, 140).spot(ctx, 2, "white"); }
 }
 
-function Ship(mu, path, heading = TAU / 4) {
+function Ship(controls, mu, path, heading = TAU / 4) {
+    this.controls = controls;
+    this.mu = mu;
+    this.path = path;
+    this.heading = heading;
+
+    // ship state
     this.size = SHIP_SIZE;
     this.color = "lime";
     this.alive = true;
     this.crashed = false;
     this.toast = false;
-    this.mu = mu;
-
-    // current position, velocity and heading
-    this.path = path;
-    this.heading = heading;
 
     // determine orbit from the path
     this.determineOrbit();
-
-    // controls
-    this.keys = new KeyState();
 }
 
 Ship.prototype.ahead = function(s = 1) {
@@ -309,19 +366,19 @@ Ship.prototype.advance = function(dt) {
     if (this.alive) {
         // steering
         let turn = dt * TURN_RAD_PER_SEC / 1000;
-        if (this.keys.left) {
+        if (this.controls.left) {
             this.heading += turn;
         }
-        if (this.keys.right) {
+        if (this.controls.right) {
             this.heading -= turn;
         }
         this.heading = angle(this.heading);
 
         // thrust
-        if (this.keys.forward) {
+        if (this.controls.forward) {
             this.thrust(dt * THRUST_ACCEL / 1000);
         }
-        if (this.keys.backward) {
+        if (this.controls.backward) {
             this.thrust(-dt * RETRO_ACCEL / 1000);
         }
     } else if (this.orbit.phi > TAU / 4 && this.orbit.phi < TAU / 2) {
@@ -357,18 +414,18 @@ Ship.prototype.die = function() {
 
 Ship.prototype.tick = function(ticks, smokes, bullets) {
     if (this.alive) {
-        if (this.keys.forward && ticks) {
+        if (this.controls.forward && ticks) {
             let aft = this.path.pos.plus(this.ahead(-5));
             smokes.push(new Smoke(aft, THRUST_SMOKE_SIZE));
         }
-        if (this.keys.backward && ticks % 2) {
+        if (this.controls.backward && ticks % 2) {
             let ahead = this.ahead();
             let fore = this.path.pos.plus(ahead.scale(4));
             let side = ahead.crossZ(3);
             smokes.push(new Smoke(fore.plus(side), RETRO_SMOKE_SIZE));
             smokes.push(new Smoke(fore.minus(side), RETRO_SMOKE_SIZE));
         }
-        if (this.keys.trigger) {
+        if (this.controls.trigger) {
             bullets.push(new Bullet(this.path, this.heading));
         }
     }
@@ -376,7 +433,7 @@ Ship.prototype.tick = function(ticks, smokes, bullets) {
 
 Ship.prototype.draw = function(ctx) {
     DEV && this.path.draw(ctx, "blue");
-    DEV && this.keys.draw(ctx);
+    DEV && this.controls.draw(ctx);
     if (this.alive) {
         this.orbit.draw(ctx);
     }
@@ -454,7 +511,7 @@ Roid.prototype.smash = function(roids) {
 Roid.prototype.draw = function(ctx) {
     let radius = this.info.radius;
     this.path.pos.spot(ctx, radius, this.color);
-    this.path.pos.write(ctx, this.hp, this.info.offset, this.info.font);
+    this.path.pos.write(ctx, this.hp, this.info.font, this.info.offset);
 }
 
 function Orbit(mu, path) {
@@ -753,7 +810,7 @@ Vec.prototype.spot = function(ctx, radius, color = null) {
     ctx.fill();
 }
 
-Vec.prototype.write = function(ctx, text, offset, font, color = "#fff") {
+Vec.prototype.write = function(ctx, text, font, offset = 0, color = "#fff") {
     ctx.save();
     ctx.font = font;
     ctx.fillStyle = color;
