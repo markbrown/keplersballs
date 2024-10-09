@@ -6,7 +6,7 @@ const DEV = false;
 // physical constants
 const GRAVITY_FACTOR = 1e5;
 const SHIP_SIZE = 5;
-const TURN_RAD_PER_SEC = TAU;
+const TURN_RAD_PER_SEC = TAU / 2;
 const THRUST_ACCEL = 10;
 const RETRO_ACCEL = 6;
 const BULLET_LIFE_MS = 1000;
@@ -14,12 +14,9 @@ const BULLET_SIZE = 1;
 const MUZZLE_VELOCITY = 200;
 
 // roids
-const ROID_SIZE_FACTOR = 8;
+const ROID_MAX_SIZE = 4;
 const ROID_SPEED_LOSS_FACTOR = 0.7;
 const ROID_SPEED_FUZZ_FACTOR = 0.2;
-const ROID_MIN_HP = 2;
-const ROID_SIZE_HP = 2;
-const ROID_VAR_HP = 6;
 
 // visual effects
 const ORBIT_MARKER_SIZE = 2;
@@ -99,7 +96,7 @@ World.prototype.circularPath = function(radius, phi = 0) {
 
 World.prototype.addRoid = function() {
     let path = this.circularPath(this.width * 0.4);
-    this.roids.push(new Roid(this.mu, 3, path));
+    this.roids.push(new Roid(this.mu, path));
 }
 
 World.prototype.run = function() {
@@ -396,18 +393,24 @@ Ship.prototype.draw = function(ctx) {
     ctx.restore();
 }
 
-function Roid(mu, size, path) {
+function Roid(mu, path, size = ROID_MAX_SIZE) {
     this.color = "#840";
     this.size = size;
     this.path = path.copy();
     this.orbit = new Orbit(mu, this.path);
-    let min = ROID_MIN_HP + this.size * ROID_SIZE_HP;
-    this.hp = min + Math.floor(Math.random() * ROID_VAR_HP);
+    this.info = Roid.info[this.size - 1];
+
+    // hit points
+    this.hp = this.info.minhp + Math.floor(this.info.varhp * Math.random());
 }
 
-Roid.prototype.sizeInPx = function() {
-    return this.size * ROID_SIZE_FACTOR;
-}
+// information for each size
+Roid.info = [
+    {radius: 8, minhp: 5, varhp: 8, font: "13px sans-serif", offset: 0.5},
+    {radius: 16, minhp: 7, varhp: 10, font: "24px sans-serif", offset: 1},
+    {radius: 22, minhp: 11, varhp: 12, font: "30px sans-serif", offset: 1},
+    {radius: 28, minhp: 14, varhp: 12, font: "38px sans-serif", offset: 2},
+];
 
 Roid.prototype.advance = function(dt) {
     this.orbit.advance(dt);
@@ -418,7 +421,7 @@ Roid.prototype.advance = function(dt) {
 // and that has the given radius
 Roid.prototype.hit = function(pos, radius = 0) {
     let r = pos.minus(this.path.pos);
-    return r.sqr() < (this.sizeInPx() + radius) ** 2;
+    return r.sqr() < (this.info.radius + radius) ** 2;
 }
 
 // take a bullet hit
@@ -431,21 +434,21 @@ Roid.prototype.smash = function(roids) {
         let mu = this.orbit.mu;
         let size = this.size - 1;
         let pos = this.path.pos;
-        let side = pos.unit().scale(this.sizeInPx() / 3);;
+        let side = pos.unit().scale(this.info.radius / 3);;
         let vel = this.path.vel.scale(ROID_SPEED_LOSS_FACTOR);
         let fuzz = this.path.vel.len() * ROID_SPEED_FUZZ_FACTOR;
         let path1 = new Path(pos.plus(side), vel.plus(Vec.fuzz(fuzz)));
         let path2 = new Path(pos.minus(side), vel.plus(Vec.fuzz(fuzz)));
         // keep the remnants
-        roids.push(new Roid(mu, size, path1));
-        roids.push(new Roid(mu, size, path2));
+        roids.push(new Roid(mu, path1, size));
+        roids.push(new Roid(mu, path2, size));
     }
 }
 
 Roid.prototype.draw = function(ctx) {
-    let size = this.sizeInPx();
-    this.path.pos.spot(ctx, size, this.color);
-    this.path.pos.write(ctx, this.hp, size * 1.4, "#fff");
+    let radius = this.info.radius;
+    this.path.pos.spot(ctx, radius, this.color);
+    this.path.pos.write(ctx, this.hp, this.info.offset, this.info.font);
 }
 
 function Orbit(mu, path) {
@@ -632,7 +635,9 @@ Bullet.prototype.position = function() {
 }
 
 Bullet.prototype.draw = function(ctx) {
-    this.position().spot(ctx, BULLET_SIZE, "#fff");
+    if (this.age < BULLET_LIFE_MS) {
+        this.position().spot(ctx, BULLET_SIZE, "#fff");
+    }
 }
 
 function Path(pos = Vec(), vel = Vec()) {
@@ -742,15 +747,13 @@ Vec.prototype.spot = function(ctx, radius, color = null) {
     ctx.fill();
 }
 
-Vec.prototype.write = function(ctx, text, size, color = null) {
+Vec.prototype.write = function(ctx, text, offset, font, color = "#fff") {
     ctx.save();
-    if (color) {
-        ctx.fillStyle = color;
-    }
-    ctx.font = "" + Math.floor(size) + "px sans-serif";
+    ctx.font = font;
+    ctx.fillStyle = color;
     ctx.translate(this.x, this.y);
     ctx.scale(1, -1);
-    ctx.fillText(text, 0, size / 16);
+    ctx.fillText(text, 0, offset);
     ctx.restore();
 }
 
