@@ -22,7 +22,7 @@ const SMOKE_EXPANSION_RATE = 4;
 const SMOKE_FUZZ = 3.5;
 const THRUST_SMOKE_SIZE = 4.5;
 const RETRO_SMOKE_SIZE = 2.5;
-const SHIP_SMASH_SLOWDOWN = 0.1;
+const SHIP_CRASH_SLOWDOWN = 0.1;
 
 // animation
 const TICK_MS = 100;
@@ -146,20 +146,7 @@ World.prototype.update = function(next) {
 }
 
 World.prototype.detectCollisions = function() {
-    let ship = this.ship;
-    if (ship) {
-        // check for ship hitting the sun
-        if (ship.path.pos.sqr() < this.radius ** 2) {
-            this.ship = null;
-        }
-
-        // check for ship hitting a roid
-        for (let roid of this.roids) {
-            if (roid.hit(ship.path.pos, ship.size)) {
-                ship.crash();
-            }
-        }
-    }
+    this.ship && this.detectShipCollision();
 
     // check for bullets hitting roids
     let roids1 = [];
@@ -178,6 +165,26 @@ World.prototype.detectCollisions = function() {
         }
     }
     this.roids = roids1;
+}
+
+World.prototype.detectShipCollision = function() {
+    let ship = this.ship;
+
+    // check for ship hitting a roid
+    for (let roid of this.roids) {
+        if (roid.hit(ship.path.pos, ship.size)) {
+            ship.crash();
+        }
+    }
+
+    // check for ship hitting the sun
+    if (ship.path.pos.sqr() < this.radius ** 2) {
+        if (ship.toast) {
+            this.ship = null;
+        } else {
+            ship.die();
+        }
+    }
 }
 
 // perform actions at regular intervals
@@ -266,6 +273,7 @@ function Ship(mu, path, heading = TAU / 4) {
     this.size = SHIP_SIZE;
     this.color = "lime";
     this.alive = true;
+    this.toast = false;
     this.mu = mu;
 
     // current position, velocity and heading
@@ -306,6 +314,10 @@ Ship.prototype.advance = function(dt) {
         if (this.keys.backward) {
             this.thrust(-dt * RETRO_ACCEL / 1000);
         }
+    } else if (this.orbit.phi > TAU / 4 && this.orbit.phi < TAU / 2) {
+        // we hit the sun earlier and have now left, dead but not gone,
+        // but we will burn up completely next time we hit
+        this.toast = true;
     }
 
     // move ship in orbit
@@ -321,11 +333,16 @@ Ship.prototype.thrust = function(dv) {
 // ship is hit by a roid
 Ship.prototype.crash = function() {
     if (this.alive) {
-        this.alive = false;
-        this.color = "SlateGrey";
-        this.path.vel = this.path.vel.scale(SHIP_SMASH_SLOWDOWN);
+        this.die();
+        this.toast = true;
+        this.path.vel = this.path.vel.scale(SHIP_CRASH_SLOWDOWN);
         this.determineOrbit();
     }
+}
+
+Ship.prototype.die = function() {
+    this.alive = false;
+    this.color = "SlateGrey";
 }
 
 Ship.prototype.tick = function(ticks, smokes, bullets) {
