@@ -17,6 +17,9 @@ const ROID_SPEED_LOSS_FACTOR = 0.7;
 const ROID_SPEED_FUZZ_FACTOR = 0.2;
 
 // visual effects
+const ORBIT_MARKER_SIZE = 2;
+const ORBIT_ALPHA = 80;
+const ORBIT_FADEOUT = 18;
 const SMOKE_LIFE_MS = 2800;
 const SMOKE_EXPANSION_RATE = 4;
 const SMOKE_FUZZ = 3.5;
@@ -543,9 +546,15 @@ Orbit.prototype.draw = function(ctx) {
     // draw points one second apart
     ctx.fillStyle = "rgb(192 192 192 / 50%";
     let path = new Path();
-    for (let t = TAU / this.omega; t > 0; t--) {
+    let t = 1;
+    let period = TAU / this.omega;
+    let alpha = ORBIT_ALPHA;
+    while (alpha > 0 && t < period) {
         this.getPath(path, t);
-        path.pos.spot(ctx, 1);
+        let color = "rgb(192 192 192 / " + Math.floor(alpha) + "%)";
+        path.pos.spot(ctx, ORBIT_MARKER_SIZE, color);
+        alpha -= this.omega * ORBIT_FADEOUT;
+        t += 1;
     }
 }
 
