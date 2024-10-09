@@ -5,10 +5,12 @@ const DEV = false;
 
 // physical constants
 const GRAVITY_FACTOR = 1e5;
+const SHIP_SIZE = 5;
 const TURN_RAD_PER_SEC = TAU;
 const THRUST_ACCEL = 10;
 const RETRO_ACCEL = 6;
 const BULLET_LIFE_MS = 1000;
+const BULLET_SIZE = 1;
 const MUZZLE_VELOCITY = 200;
 const ROID_SIZE_FACTOR = 8;
 const ROID_SPEED_LOSS_FACTOR = 0.5;
@@ -20,7 +22,7 @@ const SMOKE_EXPANSION_RATE = 4;
 const SMOKE_FUZZ = 3.5;
 const THRUST_SMOKE_SIZE = 4.5;
 const RETRO_SMOKE_SIZE = 2.5;
-const BULLET_SIZE = 1;
+const SHIP_SMASH_SLOWDOWN = 0.1;
 
 // animation
 const TICK_MS = 100;
@@ -143,13 +145,16 @@ World.prototype.update = function(next) {
     this.time = next;
 }
 
-// perform actions at regular intervals
-World.prototype.tick = function() {
-    this.ship.tick(this.ticks, this.smokes, this.bullets);
-}
-
-// check for bullets hitting roids
 World.prototype.detectCollisions = function() {
+    // check for ship hitting a roid
+    for (let roid of this.roids) {
+        let ship = this.ship;
+        if (roid.hit(ship.path.pos, ship.size)) {
+            this.ship.crash();
+        }
+    }
+
+    // check for bullets hitting roids
     let roids1 = [];
     for (let roid of this.roids) {
         let hit = false;
@@ -166,6 +171,11 @@ World.prototype.detectCollisions = function() {
         }
     }
     this.roids = roids1;
+}
+
+// perform actions at regular intervals
+World.prototype.tick = function() {
+    this.ship.tick(this.ticks, this.smokes, this.bullets);
 }
 
 // clear the canvas
@@ -246,7 +256,9 @@ KeyState.prototype.draw = function(ctx) {
 }
 
 function Ship(mu, path, heading = TAU / 4) {
+    this.size = SHIP_SIZE;
     this.color = "lime";
+    this.alive = true;
     this.mu = mu;
 
     // current position, velocity and heading
@@ -269,22 +281,24 @@ Ship.prototype.determineOrbit = function() {
 }
 
 Ship.prototype.advance = function(dt) {
-    // steering
-    let turn = dt * TURN_RAD_PER_SEC / 1000;
-    if (this.keys.left) {
-        this.heading += turn;
-    }
-    if (this.keys.right) {
-        this.heading -= turn;
-    }
-    this.heading = angle(this.heading);
+    if (this.alive) {
+        // steering
+        let turn = dt * TURN_RAD_PER_SEC / 1000;
+        if (this.keys.left) {
+            this.heading += turn;
+        }
+        if (this.keys.right) {
+            this.heading -= turn;
+        }
+        this.heading = angle(this.heading);
 
-    // thrust
-    if (this.keys.forward) {
-        this.thrust(dt * THRUST_ACCEL / 1000);
-    }
-    if (this.keys.backward) {
-        this.thrust(-dt * RETRO_ACCEL / 1000);
+        // thrust
+        if (this.keys.forward) {
+            this.thrust(dt * THRUST_ACCEL / 1000);
+        }
+        if (this.keys.backward) {
+            this.thrust(-dt * RETRO_ACCEL / 1000);
+        }
     }
 
     // move ship in orbit
@@ -297,27 +311,41 @@ Ship.prototype.thrust = function(dv) {
     this.determineOrbit();
 }
 
+// ship is hit by a roid
+Ship.prototype.crash = function() {
+    if (this.alive) {
+        this.alive = false;
+        this.color = "SlateGrey";
+        this.path.vel = this.path.vel.scale(SHIP_SMASH_SLOWDOWN);
+        this.determineOrbit();
+    }
+}
+
 Ship.prototype.tick = function(ticks, smokes, bullets) {
-    if (this.keys.forward && ticks % 2) {
-        let aft = this.path.pos.plus(this.ahead(-5));
-        smokes.push(new Smoke(aft, THRUST_SMOKE_SIZE));
-    }
-    if (this.keys.backward && ticks % 2 == 1) {
-        let ahead = this.ahead();
-        let fore = this.path.pos.plus(ahead.scale(4));
-        let side = ahead.crossZ(3);
-        smokes.push(new Smoke(fore.plus(side), RETRO_SMOKE_SIZE));
-        smokes.push(new Smoke(fore.minus(side), RETRO_SMOKE_SIZE));
-    }
-    if (this.keys.trigger) {
-        bullets.push(new Bullet(this.path, this.heading));
+    if (this.alive) {
+        if (this.keys.forward && ticks % 2) {
+            let aft = this.path.pos.plus(this.ahead(-5));
+            smokes.push(new Smoke(aft, THRUST_SMOKE_SIZE));
+        }
+        if (this.keys.backward && ticks % 2 == 1) {
+            let ahead = this.ahead();
+            let fore = this.path.pos.plus(ahead.scale(4));
+            let side = ahead.crossZ(3);
+            smokes.push(new Smoke(fore.plus(side), RETRO_SMOKE_SIZE));
+            smokes.push(new Smoke(fore.minus(side), RETRO_SMOKE_SIZE));
+        }
+        if (this.keys.trigger) {
+            bullets.push(new Bullet(this.path, this.heading));
+        }
     }
 }
 
 Ship.prototype.draw = function(ctx) {
     DEV && this.path.draw(ctx, "blue");
     DEV && this.keys.draw(ctx);
-    this.orbit.draw(ctx);
+    if (this.alive) {
+        this.orbit.draw(ctx);
+    }
     ctx.save();
     ctx.translate(this.path.pos.x, this.path.pos.y);
     ctx.rotate(this.heading);
