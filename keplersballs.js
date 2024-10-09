@@ -11,6 +11,8 @@ const RETRO_ACCEL = 6;
 const BULLET_LIFE_MS = 1000;
 const MUZZLE_VELOCITY = 200;
 const ROID_SIZE_FACTOR = 8;
+const ROID_SPEED_LOSS_FACTOR = 0.5;
+const ROID_SPEED_FUZZ_FACTOR = 0.2;
 
 // visual effects
 const SMOKE_LIFE_MS = 2400;
@@ -152,12 +154,14 @@ World.prototype.detectCollisions = function() {
     for (let roid of this.roids) {
         let hit = false;
         for (let bullet of this.bullets) {
-            if (roid.hit(bullet.position())) {
+            if (roid.hit(bullet.position(), BULLET_SIZE)) {
                 bullet.destroy();
                 hit = true;
             }
         }
-        if (!hit) {
+        if (hit) {
+            roid.smash(roids1);
+        } else {
             roids1.push(roid);
         }
     }
@@ -334,18 +338,36 @@ function Roid(mu, size, path) {
     this.orbit = new Orbit(mu, this.path);
 }
 
+Roid.prototype.sizeInPx = function() {
+    return this.size * ROID_SIZE_FACTOR;
+}
+
 Roid.prototype.advance = function(dt) {
     this.orbit.advance(dt);
     this.orbit.getPath(this.path);
 }
 
-Roid.prototype.hit = function(pos) {
+// detect whether the roid is hit by an object at the given position,
+// and that has the given radius
+Roid.prototype.hit = function(pos, radius = 0) {
     let r = pos.minus(this.path.pos);
-    return r.dot(r) < this.sizeInPx() ** 2;
+    return r.dot(r) < (this.sizeInPx() + radius) ** 2;
 }
 
-Roid.prototype.sizeInPx = function() {
-    return this.size * ROID_SIZE_FACTOR;
+// split a roid and add any remnants to the given list
+Roid.prototype.smash = function(roids) {
+    if (this.size > 1) {
+        let mu = this.orbit.mu;
+        let size = this.size - 1;
+        let pos = this.path.pos;
+        let side = pos.unit().scale(this.sizeInPx() / 3);;
+        let vel = this.path.vel.scale(ROID_SPEED_LOSS_FACTOR);
+        let fuzz = this.path.vel.len() * ROID_SPEED_FUZZ_FACTOR;
+        let path1 = new Path(pos.plus(side), vel.plus(Vec.fuzz(fuzz)));
+        let path2 = new Path(pos.minus(side), vel.plus(Vec.fuzz(fuzz)));
+        roids.push(new Roid(mu, size, path1));
+        roids.push(new Roid(mu, size, path2));
+    }
 }
 
 Roid.prototype.draw = function(ctx) {
