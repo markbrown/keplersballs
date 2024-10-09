@@ -394,7 +394,7 @@ Ship.prototype.draw = function(ctx) {
 }
 
 function Roid(mu, path, size = ROID_MAX_SIZE) {
-    this.color = "#840";
+    this.color = Roid.colors[Math.floor(Math.random() * Roid.colors.length)];
     this.size = size;
     this.path = path.copy();
     this.orbit = new Orbit(mu, this.path);
@@ -404,12 +404,18 @@ function Roid(mu, path, size = ROID_MAX_SIZE) {
     this.hp = this.info.minhp + Math.floor(this.info.varhp * Math.random());
 }
 
-// information for each size
+// information for each roid size
 Roid.info = [
     {radius: 8, minhp: 5, varhp: 8, font: "13px sans-serif", offset: 0.5},
     {radius: 16, minhp: 7, varhp: 10, font: "24px sans-serif", offset: 1},
     {radius: 22, minhp: 11, varhp: 12, font: "30px sans-serif", offset: 1},
     {radius: 28, minhp: 14, varhp: 12, font: "38px sans-serif", offset: 2},
+];
+
+Roid.colors = [
+    "IndianRed", "PaleVioletRed", "Tomato", "Orchid", "DarkKhaki",
+    "RebeccaPurple", "DarkSlateBlue", "Purple", "Olive", "Teal",
+    "CadetBlue", "CornflowerBlue", "RosyBrown", "SaddleBrown", "Maroon",
 ];
 
 Roid.prototype.advance = function(dt) {
