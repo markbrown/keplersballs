@@ -19,7 +19,7 @@ Fire thrusters against the direction of travel
 to lower the opposite side of the orbit.
 
 Shoot or dodge any obstacles that come your way.
-If you destroy all of the balls without getting hit, you win.
+If you destroy all of the debris without getting hit, you win.
 
 Bullets travel farther and faster when fired in the direction of travel
 at the low point of the orbit, where the ship is moving most rapidly.
