@@ -13,14 +13,14 @@ const BULLET_LIFE_MS = 1000;
 const BULLET_SIZE = 1;
 const MUZZLE_VELOCITY = 200;
 const ROID_SIZE_FACTOR = 8;
-const ROID_SPEED_LOSS_FACTOR = 0.5;
+const ROID_SPEED_LOSS_FACTOR = 0.7;
 const ROID_SPEED_FUZZ_FACTOR = 0.2;
 
 // visual effects
-const SMOKE_LIFE_MS = 2400;
+const SMOKE_LIFE_MS = 2800;
 const SMOKE_EXPANSION_RATE = 4;
 const SMOKE_FUZZ = 3.5;
-const THRUST_SMOKE_SIZE = 4.5;
+const THRUST_SMOKE_SIZE = 5;
 const RETRO_SMOKE_SIZE = 2.5;
 const SHIP_CRASH_SLOWDOWN = 0.1;
 
@@ -178,8 +178,8 @@ World.prototype.detectShipCollision = function() {
     }
 
     // check for ship hitting the sun
-    if (ship.path.pos.sqr() < this.radius ** 2) {
-        if (ship.toast) {
+    if (ship.path.pos.sqr() < (this.radius + ship.size) ** 2) {
+        if (ship.crashed || ship.toast) {
             this.ship = null;
         } else {
             ship.die();
@@ -273,6 +273,7 @@ function Ship(mu, path, heading = TAU / 4) {
     this.size = SHIP_SIZE;
     this.color = "lime";
     this.alive = true;
+    this.crashed = false;
     this.toast = false;
     this.mu = mu;
 
@@ -332,9 +333,9 @@ Ship.prototype.thrust = function(dv) {
 
 // ship is hit by a roid
 Ship.prototype.crash = function() {
-    if (this.alive) {
+    if (!this.crashed) {
         this.die();
-        this.toast = true;
+        this.crashed = true;
         this.path.vel = this.path.vel.scale(SHIP_CRASH_SLOWDOWN);
         this.determineOrbit();
     }
@@ -347,11 +348,11 @@ Ship.prototype.die = function() {
 
 Ship.prototype.tick = function(ticks, smokes, bullets) {
     if (this.alive) {
-        if (this.keys.forward && ticks % 2) {
+        if (this.keys.forward && ticks) {
             let aft = this.path.pos.plus(this.ahead(-5));
             smokes.push(new Smoke(aft, THRUST_SMOKE_SIZE));
         }
-        if (this.keys.backward && ticks % 2 == 1) {
+        if (this.keys.backward && ticks % 2) {
             let ahead = this.ahead();
             let fore = this.path.pos.plus(ahead.scale(4));
             let side = ahead.crossZ(3);
