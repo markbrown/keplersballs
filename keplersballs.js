@@ -137,12 +137,31 @@ World.prototype.update = function(next) {
         }
     }
     this.bullets = bullets1;
+    this.detectCollisions();
     this.time = next;
 }
 
 // perform actions at regular intervals
 World.prototype.tick = function() {
     this.ship.tick(this.ticks, this.smokes, this.bullets);
+}
+
+// check for bullets hitting roids
+World.prototype.detectCollisions = function() {
+    let roids1 = [];
+    for (let roid of this.roids) {
+        let hit = false;
+        for (let bullet of this.bullets) {
+            if (roid.hit(bullet.position())) {
+                bullet.destroy();
+                hit = true;
+            }
+        }
+        if (!hit) {
+            roids1.push(roid);
+        }
+    }
+    this.roids = roids1;
 }
 
 // clear the canvas
@@ -317,11 +336,20 @@ function Roid(mu, size, path) {
 
 Roid.prototype.advance = function(dt) {
     this.orbit.advance(dt);
+    this.orbit.getPath(this.path);
+}
+
+Roid.prototype.hit = function(pos) {
+    let r = pos.minus(this.path.pos);
+    return r.dot(r) < this.sizeInPx() ** 2;
+}
+
+Roid.prototype.sizeInPx = function() {
+    return this.size * ROID_SIZE_FACTOR;
 }
 
 Roid.prototype.draw = function(ctx) {
-    this.orbit.getPath(this.path);
-    this.path.pos.spot(ctx, this.size * ROID_SIZE_FACTOR, this.color);
+    this.path.pos.spot(ctx, this.sizeInPx(), this.color);
 }
 
 function Orbit(mu, path) {
@@ -490,6 +518,11 @@ function Bullet(path, heading) {
 
 Bullet.prototype.advance = function(dt) {
     this.age += dt;
+}
+
+// make the bullet disappear at the start of the next frame
+Bullet.prototype.destroy = function() {
+    this.age = BULLET_LIFE_MS;
 }
 
 Bullet.prototype.position = function() {
