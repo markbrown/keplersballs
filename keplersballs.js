@@ -17,7 +17,8 @@ const REPLAY_DELAY_MS = 2000;
 // physical constants
 const GRAVITY_FACTOR = 1e5;
 const SHIP_SIZE = 5;
-const TURN_RAD_PER_SEC = TAU / 2;
+const TURN_RAD_PER_SEC = TAU;
+const TURN_RAMP_RATE = 5 * TAU;
 const THRUST_ACCEL = 10;
 const RETRO_ACCEL = 6;
 const SHIP_CRASH_SLOWDOWN = 0.1;
@@ -29,6 +30,7 @@ const MUZZLE_VELOCITY = 200;
 
 // roids
 const ROID_COUNT = 7;
+const ROID_DISTANCE_VARIATION = 200;
 const ROID_MAX_SIZE = 4;
 const ROID_SPEED_LOSS_FACTOR = 0.8;
 const ROID_SPEED_FUZZ_FACTOR = 0.3;
@@ -114,7 +116,8 @@ World.prototype.circularPath = function(radius, phi = 0) {
 }
 
 World.prototype.addRoid = function() {
-    let path = this.circularPath(this.width * 0.4, Math.random() * TAU);
+    let radius = this.width * 0.3 + (Math.random() * ROID_DISTANCE_VARIATION);
+    let path = this.circularPath(radius, Math.random() * TAU);
     this.roids.push(new Roid(this.mu, path));
 }
 
@@ -123,11 +126,10 @@ World.prototype.start = function() {
     if (!this.overlay.title) {
         this.setup();
     }
-    this.controls.reset();
     this.last = Date.now();
     this.time = 0;
     this.ticks = 0;
-    this.controls.enabled = true;
+    this.controls.enable();
     this.running = true;
 }
 
@@ -328,6 +330,11 @@ function KeyState() {
     addEventListener("keyup", (ev) => this.keyevent(ev.code, false));
 }
 
+KeyState.prototype.enable = function() {
+    this.reset();
+    this.enabled = true;
+}
+
 KeyState.prototype.reset = function() {
     this.forward = false;
     this.backward = false;
@@ -376,11 +383,35 @@ KeyState.prototype.draw = function(ctx) {
     if (this.trigger) { Vec(0, 140).spot(ctx, 2, "white"); }
 }
 
+// keep track of the current turning rate
+function Turn() {
+    this.rate = 0;
+}
+
+// how much turn do we get within our limits?
+Turn.prototype.turn = function(ds) {
+    let ramp = ds * TURN_RAMP_RATE;
+    let next = Math.min(this.rate + ramp, TURN_RAD_PER_SEC);
+    let avg = (this.rate + next) / 2;
+    this.rate = next;
+    return ds * avg;
+}
+
+Turn.prototype.decay = function(ds) {
+    // turning rate decreases at half the rate it increases
+    let ramp = ds * TURN_RAMP_RATE / 2;
+    this.rate = Math.max(0, this.rate - ramp);
+}
+
 function Ship(controls, mu, path, heading = TAU / 4) {
     this.controls = controls;
     this.mu = mu;
     this.path = path;
     this.heading = heading;
+
+    // rate of turn
+    this.left = new Turn();
+    this.right = new Turn();
 
     // ship state
     this.size = SHIP_SIZE;
@@ -407,22 +438,29 @@ Ship.prototype.determineOrbit = function() {
 
 Ship.prototype.advance = function(dt) {
     if (this.alive()) {
+        let ds = dt / 1000;
+
         // steering
-        let turn = dt * TURN_RAD_PER_SEC / 1000;
         if (this.controls.left) {
-            this.heading += turn;
+            this.heading += this.left.turn(ds);
+            this.right.rate = 0;
+        } else {
+            this.left.decay(ds);
         }
         if (this.controls.right) {
-            this.heading -= turn;
+            this.heading -= this.right.turn(ds);
+            this.left.rate = 0;
+        } else {
+            this.right.decay(ds);
         }
         this.heading = angle(this.heading);
 
         // thrust
         if (this.controls.forward) {
-            this.thrust(dt * THRUST_ACCEL / 1000);
+            this.thrust(ds * THRUST_ACCEL);
         }
         if (this.controls.backward) {
-            this.thrust(-dt * RETRO_ACCEL / 1000);
+            this.thrust(-ds * RETRO_ACCEL);
         }
     } else if (this.orbit.phi > TAU / 4 && this.orbit.phi < TAU / 2) {
         // we hit the sun earlier and have now left, dead but not gone,
