@@ -21,6 +21,7 @@ const TURN_RAD_PER_SEC = TAU;
 const TURN_RAMP_RATE = 5 * TAU;
 const THRUST_ACCEL = 10;
 const RETRO_ACCEL = 6;
+const SPEED_CAP = 0.98;
 const SHIP_CRASH_SLOWDOWN = 0.1;
 
 // bullets
@@ -458,8 +459,7 @@ Ship.prototype.advance = function(dt) {
         // thrust
         if (this.controls.forward) {
             this.thrust(ds * THRUST_ACCEL);
-        }
-        if (this.controls.backward) {
+        } else if (this.controls.backward) {
             this.thrust(-ds * RETRO_ACCEL);
         }
     } else if (this.orbit.phi > TAU / 4 && this.orbit.phi < TAU / 2) {
@@ -475,6 +475,12 @@ Ship.prototype.advance = function(dt) {
 
 Ship.prototype.thrust = function(dv) {
     this.path.impulse(this.ahead(dv));
+
+    // ensure ship does not reach escape velocity
+    let vmax = Math.sqrt(2 * this.mu / this.path.pos.len()) * SPEED_CAP;
+    this.path.speedCap(vmax);
+
+    // determine the new orbit after the change in velocity
     this.determineOrbit();
 }
 
@@ -534,12 +540,10 @@ Ship.prototype.draw = function(ctx) {
 function Roid(mu, path, size = ROID_MAX_SIZE) {
     this.color = Roid.colors[Math.floor(Math.random() * Roid.colors.length)];
     this.size = size;
-    this.path = path.copy();
-    this.orbit = new Orbit(mu, this.path);
     this.info = Roid.info[this.size - 1];
-
-    // randomize the speed a little
-    this.fuzz();
+    this.path = path.copy();
+    this.fuzz(mu);
+    this.orbit = new Orbit(mu, this.path);
 
     // hit points
     this.hp = this.info.minhp + Math.floor(this.info.varhp * Math.random());
@@ -564,9 +568,13 @@ Roid.prototype.advance = function(dt) {
     this.orbit.getPath(this.path);
 }
 
-Roid.prototype.fuzz = function() {
+// randomize the speed a little
+Roid.prototype.fuzz = function(mu) {
     let fuzz = this.path.vel.len() * ROID_SPEED_FUZZ_FACTOR;
     this.path.impulse(Vec.fuzz(fuzz));
+    // ensure roid does not reach escape velocity
+    let vmax = Math.sqrt(2 * mu / this.path.pos.len()) * SPEED_CAP;
+    this.path.speedCap(vmax);
 }
 
 // detect whether the roid is hit by an object at the given position,
@@ -811,6 +819,14 @@ Path.prototype.position = function(t = 0) {
 
 Path.prototype.impulse = function(dv) {
     this.vel = this.vel.plus(dv);
+}
+
+// cap the speed at the given amount
+Path.prototype.speedCap = function(vmax) {
+    let v = this.vel.len();
+    if (v > vmax) {
+        this.vel = this.vel.scale(vmax / v);
+    }
 }
 
 Path.prototype.draw = function(ctx, color = null) {
