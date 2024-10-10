@@ -28,10 +28,13 @@ const SHIP_CRASH_SLOWDOWN = 0.1;
 const BULLET_LIFE_MS = 1000;
 const BULLET_SIZE = 1;
 const MUZZLE_VELOCITY = 200;
+const EXCESS_DAMAGE_SPEED = 100;
+const EXCESS_DAMAGE_HP = 2;
+const EXCESS_DAMAGE_VAR = 2;
 
 // roids
 const ROID_COUNT = 7;
-const ROID_DISTANCE_VARIATION = 200;
+const ROID_DISTANCE_VARIATION = 180;
 const ROID_MAX_SIZE = 4;
 const ROID_SPEED_LOSS_FACTOR = 0.8;
 const ROID_SPEED_FUZZ_FACTOR = 0.3;
@@ -104,7 +107,8 @@ World.prototype.setup = function(path = null) {
     this.roids = [];
 
     // add roids
-    for (let i = 0; i < ROID_COUNT; i++) {
+    let count = DEV ? 1 : ROID_COUNT;
+    for (let i = 0; i < count; i++) {
         this.addRoid();
     }
 }
@@ -196,18 +200,13 @@ World.prototype.detectCollisions = function() {
     // check for bullets hitting roids
     let roids1 = [];
     for (let roid of this.roids) {
-        let hit = false;
+        let hits = 0;
         for (let bullet of this.bullets) {
             if (roid.hit(bullet.position(), BULLET_SIZE)) {
-                bullet.destroy();
-                hit = true;
+                hits += bullet.damage();
             }
         }
-        if (hit) {
-            roid.smash(roids1);
-        } else {
-            roids1.push(roid);
-        }
+        roid.smash(hits, roids1);
     }
     this.roids = roids1;
 }
@@ -585,9 +584,9 @@ Roid.prototype.hit = function(pos, radius = 0) {
 }
 
 // take a bullet hit
-Roid.prototype.smash = function(roids) {
-    if (this.hp > 1) {
-        this.hp--;
+Roid.prototype.smash = function(hits, roids) {
+    if (this.hp > hits) {
+        this.hp -= hits;
         // keep this roid
         roids.push(this);
     } else if (this.size > 1) {
@@ -778,15 +777,32 @@ function Bullet(path, heading) {
     this.path = path.copy();
     this.path.impulse(Vec.polar(MUZZLE_VELOCITY, heading));
     this.age = 0;
+    if (DEV) {
+        let speed = this.path.vel.len();
+        if (speed > Bullet.speedRecord) {
+            Bullet.speedRecord = speed;
+            console.log("bullet speed " + speed);
+        }
+    }
 }
+
+Bullet.speedRecord = 0;
 
 Bullet.prototype.advance = function(dt) {
     this.age += dt;
 }
 
-// make the bullet disappear at the start of the next frame
-Bullet.prototype.destroy = function() {
+// use the bullet up and return the amount of damage caused
+Bullet.prototype.damage = function() {
     this.age = BULLET_LIFE_MS;
+    let damage = 1;
+    let excess = this.path.vel.len() - MUZZLE_VELOCITY;
+    let bonus = Math.floor(excess / EXCESS_DAMAGE_SPEED);
+    for (let i = 0; i < bonus; i++) {
+        damage += EXCESS_DAMAGE_HP;
+        damage += Math.floor(Math.random() * EXCESS_DAMAGE_VAR);
+    }
+    return damage;
 }
 
 Bullet.prototype.position = function() {
