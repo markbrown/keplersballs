@@ -3,11 +3,16 @@ const TAU = 2 * Math.PI;
 // display additional info
 const DEV = false;
 
-// messages
+// overlay
+const TITLE_FONT = "100px sans-serif";
 const TITLE_TEXT = "KEPLER'S BALLS";
+const RESULT_FONT = "80px sans-serif";
 const VICTORY_TEXT = "YOU WIN!";
+const GAME_OVER_TEXT = "GAME OVER";
+const PLAY_FONT = "30px sans-serif";
 const PLAY_TEXT = "press any key to play";
-const PLAY_AGAIN_TEXT = "press any key to play again";
+const REPLAY_TEXT = "press any key to play again";
+const REPLAY_DELAY_MS = 2500;
 
 // physical constants
 const GRAVITY_FACTOR = 1e5;
@@ -15,6 +20,9 @@ const SHIP_SIZE = 5;
 const TURN_RAD_PER_SEC = TAU / 2;
 const THRUST_ACCEL = 10;
 const RETRO_ACCEL = 6;
+const SHIP_CRASH_SLOWDOWN = 0.1;
+
+// bullets
 const BULLET_LIFE_MS = 1000;
 const BULLET_SIZE = 1;
 const MUZZLE_VELOCITY = 200;
@@ -33,7 +41,6 @@ const SMOKE_EXPANSION_RATE = 4;
 const SMOKE_FUZZ = 3.5;
 const THRUST_SMOKE_SIZE = 5;
 const RETRO_SMOKE_SIZE = 2.5;
-const SHIP_CRASH_SLOWDOWN = 0.1;
 
 // animation
 const TICK_MS = 100;
@@ -60,7 +67,9 @@ function World(color = "yellow", radius = 10, path = null) {
     this.ctx.textBaseline = "middle";
 
     // game state
+    this.overlay = new Overlay(this);
     this.controls = new KeyState();
+    this.running = false;
 
     // gravitational parameter
     this.mu = radius * GRAVITY_FACTOR;
@@ -69,31 +78,13 @@ function World(color = "yellow", radius = 10, path = null) {
     this.color = color;
     this.radius = radius;
 
+    // create world objects
     this.setup(path);
 
-    addEventListener("keydown", (ev) => this.hitkey());
-}
-
-World.prototype.hitkey = function() {
-    if (this.showtitle()) {
-        // start the game
-        this.controls.enabled = true;
-    } else if (!this.running()) {
-        // start a new game
-        this.setup();
-    }
-}
-
-World.prototype.showtitle = function() {
-    return !this.controls.enabled;
-}
-
-World.prototype.running = function() {
-    return this.roids.length > 0 && this.ship && this.ship.alive;
-}
-
-World.prototype.victory = function() {
-    return this.roids.length == 0;
+    // keep track of game time
+    this.last = Date.now();
+    this.time = 0;
+    this.ticks = 0;
 }
 
 World.prototype.setup = function(path = null) {
@@ -110,11 +101,6 @@ World.prototype.setup = function(path = null) {
 
     // add a roid
     this.addRoid();
-
-    // keep track of game time
-    this.last = Date.now();
-    this.time = 0;
-    this.ticks = 0;
 }
 
 World.prototype.circularPath = function(radius, phi = 0) {
@@ -127,6 +113,19 @@ World.prototype.circularPath = function(radius, phi = 0) {
 World.prototype.addRoid = function() {
     let path = this.circularPath(this.width * 0.4);
     this.roids.push(new Roid(this.mu, path));
+}
+
+// called from `Overlay` when a key is pressed
+World.prototype.start = function() {
+    if (!this.overlay.title) {
+        this.setup();
+    }
+    this.controls.reset();
+    this.last = Date.now();
+    this.time = 0;
+    this.ticks = 0;
+    this.controls.enabled = true;
+    this.running = true;
 }
 
 World.prototype.run = function() {
@@ -181,6 +180,7 @@ World.prototype.update = function(next) {
     }
     this.bullets = bullets1;
     this.detectCollisions();
+    this.detectFinish();
     this.time = next;
 }
 
@@ -226,6 +226,19 @@ World.prototype.detectShipCollision = function() {
     }
 }
 
+World.prototype.detectFinish = function() {
+    if (this.running) {
+        if (!this.controls.enabled) {
+            this.overlay.finish(false);
+            this.running = false;
+        } else if (this.roids.length == 0) {
+            this.overlay.finish(true);
+            this.controls.enabled = false;
+            this.running = false;
+        }
+    }
+}
+
 // perform actions at regular intervals
 World.prototype.tick = function() {
     this.ship && this.ship.tick(this.ticks, this.smokes, this.bullets);
@@ -254,29 +267,52 @@ World.prototype.draw = function(clear = true) {
     }
     Vec().spot(this.ctx, this.radius, this.color);
 
-    if (this.showtitle()) {
-        this.drawTitle();
-    } else if (!this.running()) {
-        this.drawEndGame();
+    // draw game overlay any time the controls are not enabled
+    if (!this.running) {
+        this.overlay.draw(this.ctx);
     }
 }
 
-World.prototype.drawTitle = function() {
-    let titlefont = "100px sans-serif";
-    Vec(0, this.height / 3).write(this.ctx, TITLE_TEXT, titlefont);
-    let msgfont = "30px sans-serif";
-    Vec(0, -this.height / 3).write(this.ctx, PLAY_TEXT, msgfont);
+// keep track of the state of the game
+function Overlay(world) {
+    this.world = world;
+    this.title = true;
+    this.victory = false;
+    this.replay = false;
+    let offset = world.height / 3;
+    this.head = Vec(0, offset);
+    this.foot = Vec(0, -offset);
+
+    addEventListener("keydown", (ev) => this.hitkey());
 }
 
-World.prototype.drawEndGame = function() {
-    let titlefont = "80px sans-serif";
-    let msgfont = "30px sans-serif";
-    if (this.victory()) {
-        Vec(0, this.height / 3).write(this.ctx, VICTORY_TEXT, titlefont);
-        Vec(0, -this.height / 3).write(this.ctx, PLAY_AGAIN_TEXT, msgfont);
+Overlay.prototype.hitkey = function() {
+    if (this.title || this.replay) {
+        this.title = false;
+        this.victory = false;
+        this.replay = false;
+        this.world.start();
+    }
+}
+
+Overlay.prototype.finish = function(victory) {
+    this.victory = victory;
+    setTimeout(() => { this.replay = true; }, REPLAY_DELAY_MS);
+}
+
+Overlay.prototype.draw = function(ctx) {
+    if (this.title) {
+        this.head.write(ctx, TITLE_FONT, TITLE_TEXT);
+        this.foot.write(ctx, PLAY_FONT, PLAY_TEXT);
     } else {
-        Vec(0, this.height / 3).write(this.ctx, GAME_OVER_TEXT, titlefont);
-        Vec(0, -this.height / 3).write(this.ctx, PLAY_AGAIN_TEXT, msgfont);
+        if (this.victory) {
+            this.head.write(ctx, RESULT_FONT, VICTORY_TEXT);
+        } else {
+            this.head.write(ctx, RESULT_FONT, GAME_OVER_TEXT);
+        }
+        if (this.replay) {
+            this.foot.write(ctx, PLAY_FONT, REPLAY_TEXT);
+        }
     }
 }
 
@@ -346,12 +382,16 @@ function Ship(controls, mu, path, heading = TAU / 4) {
     // ship state
     this.size = SHIP_SIZE;
     this.color = "lime";
-    this.alive = true;
     this.crashed = false;
     this.toast = false;
 
     // determine orbit from the path
     this.determineOrbit();
+}
+
+Ship.prototype.alive = function() {
+    // controls are disabled once the ship dies
+    return this.controls.enabled;
 }
 
 Ship.prototype.ahead = function(s = 1) {
@@ -363,7 +403,7 @@ Ship.prototype.determineOrbit = function() {
 }
 
 Ship.prototype.advance = function(dt) {
-    if (this.alive) {
+    if (this.alive()) {
         // steering
         let turn = dt * TURN_RAD_PER_SEC / 1000;
         if (this.controls.left) {
@@ -408,12 +448,12 @@ Ship.prototype.crash = function() {
 }
 
 Ship.prototype.die = function() {
-    this.alive = false;
+    this.controls.enabled = false;
     this.color = "SlateGrey";
 }
 
 Ship.prototype.tick = function(ticks, smokes, bullets) {
-    if (this.alive) {
+    if (this.alive()) {
         if (this.controls.forward && ticks) {
             let aft = this.path.pos.plus(this.ahead(-5));
             smokes.push(new Smoke(aft, THRUST_SMOKE_SIZE));
@@ -434,7 +474,7 @@ Ship.prototype.tick = function(ticks, smokes, bullets) {
 Ship.prototype.draw = function(ctx) {
     DEV && this.path.draw(ctx, "blue");
     DEV && this.controls.draw(ctx);
-    if (this.alive) {
+    if (this.alive()) {
         this.orbit.draw(ctx);
     }
     ctx.save();
@@ -511,7 +551,7 @@ Roid.prototype.smash = function(roids) {
 Roid.prototype.draw = function(ctx) {
     let radius = this.info.radius;
     this.path.pos.spot(ctx, radius, this.color);
-    this.path.pos.write(ctx, this.hp, this.info.font, this.info.offset);
+    this.path.pos.write(ctx, this.info.font, this.hp, this.info.offset);
 }
 
 function Orbit(mu, path) {
@@ -810,7 +850,7 @@ Vec.prototype.spot = function(ctx, radius, color = null) {
     ctx.fill();
 }
 
-Vec.prototype.write = function(ctx, text, font, offset = 0, color = "#fff") {
+Vec.prototype.write = function(ctx, font, text, offset = 0, color = "#fff") {
     ctx.save();
     ctx.font = font;
     ctx.fillStyle = color;
