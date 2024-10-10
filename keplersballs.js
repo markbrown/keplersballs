@@ -28,6 +28,7 @@ const BULLET_SIZE = 1;
 const MUZZLE_VELOCITY = 200;
 
 // roids
+const ROID_COUNT = 7;
 const ROID_MAX_SIZE = 4;
 const ROID_SPEED_LOSS_FACTOR = 0.8;
 const ROID_SPEED_FUZZ_FACTOR = 0.3;
@@ -99,8 +100,10 @@ World.prototype.setup = function(path = null) {
     this.bullets = [];
     this.roids = [];
 
-    // add a roid
-    this.addRoid();
+    // add roids
+    for (let i = 0; i < ROID_COUNT; i++) {
+        this.addRoid();
+    }
 }
 
 World.prototype.circularPath = function(radius, phi = 0) {
@@ -111,7 +114,7 @@ World.prototype.circularPath = function(radius, phi = 0) {
 }
 
 World.prototype.addRoid = function() {
-    let path = this.circularPath(this.width * 0.4);
+    let path = this.circularPath(this.width * 0.4, Math.random() * TAU);
     this.roids.push(new Roid(this.mu, path));
 }
 
@@ -497,6 +500,9 @@ function Roid(mu, path, size = ROID_MAX_SIZE) {
     this.orbit = new Orbit(mu, this.path);
     this.info = Roid.info[this.size - 1];
 
+    // randomize the speed a little
+    this.fuzz();
+
     // hit points
     this.hp = this.info.minhp + Math.floor(this.info.varhp * Math.random());
 }
@@ -520,6 +526,11 @@ Roid.prototype.advance = function(dt) {
     this.orbit.getPath(this.path);
 }
 
+Roid.prototype.fuzz = function() {
+    let fuzz = this.path.vel.len() * ROID_SPEED_FUZZ_FACTOR;
+    this.path.impulse(Vec.fuzz(fuzz));
+}
+
 // detect whether the roid is hit by an object at the given position,
 // and that has the given radius
 Roid.prototype.hit = function(pos, radius = 0) {
@@ -539,12 +550,11 @@ Roid.prototype.smash = function(roids) {
         let pos = this.path.pos;
         let side = pos.unit().scale(this.info.radius / 3);;
         let vel = this.path.vel.scale(ROID_SPEED_LOSS_FACTOR);
-        let fuzz = this.path.vel.len() * ROID_SPEED_FUZZ_FACTOR;
-        let path1 = new Path(pos.plus(side), vel.plus(Vec.fuzz(fuzz)));
-        let path2 = new Path(pos.minus(side), vel.plus(Vec.fuzz(fuzz)));
+        let path1 = new Path(pos.plus(side), vel);
+        let path2 = new Path(pos.minus(side), vel);
         // keep the remnants
-        roids.push(new Roid(mu, path1, size));
-        roids.push(new Roid(mu, path2, size));
+        roids.push(new Roid(mu, new Path(pos.plus(side), vel), size));
+        roids.push(new Roid(mu, new Path(pos.minus(side), vel), size));
     }
 }
 
@@ -750,6 +760,11 @@ function Path(pos = Vec(), vel = Vec()) {
 
 Path.prototype.copy = function() {
     return new Path(this.pos, this.vel);
+}
+
+Path.prototype.rotate = function(theta) {
+    this.pos = this.pos.rotate(theta);
+    this.vel = this.vel.rotate(theta);
 }
 
 Path.prototype.position = function(t = 0) {
