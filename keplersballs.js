@@ -12,7 +12,7 @@ const GAME_OVER_TEXT = "GAME OVER";
 const PLAY_FONT = "30px sans-serif";
 const PLAY_TEXT = "press any key to play";
 const REPLAY_TEXT = "press any key to play again";
-const REPLAY_DELAY_MS = 2500;
+const REPLAY_DELAY_MS = 2000;
 
 // physical constants
 const GRAVITY_FACTOR = 1e5;
@@ -29,8 +29,8 @@ const MUZZLE_VELOCITY = 200;
 
 // roids
 const ROID_MAX_SIZE = 4;
-const ROID_SPEED_LOSS_FACTOR = 0.7;
-const ROID_SPEED_FUZZ_FACTOR = 0.2;
+const ROID_SPEED_LOSS_FACTOR = 0.8;
+const ROID_SPEED_FUZZ_FACTOR = 0.3;
 
 // visual effects
 const ORBIT_MARKER_SIZE = 2;
@@ -503,10 +503,10 @@ function Roid(mu, path, size = ROID_MAX_SIZE) {
 
 // information for each roid size
 Roid.info = [
-    {radius: 8, minhp: 5, varhp: 8, font: "13px sans-serif", offset: 0.5},
-    {radius: 16, minhp: 7, varhp: 10, font: "24px sans-serif", offset: 1},
-    {radius: 22, minhp: 11, varhp: 12, font: "30px sans-serif", offset: 1},
-    {radius: 28, minhp: 14, varhp: 12, font: "38px sans-serif", offset: 2},
+    {radius: 12, minhp: 5, varhp: 8, font: "18px sans-serif", offset: 1.2},
+    {radius: 18, minhp: 7, varhp: 10, font: "24px sans-serif", offset: 1.4},
+    {radius: 24, minhp: 11, varhp: 12, font: "30px sans-serif", offset: 1},
+    {radius: 30, minhp: 14, varhp: 12, font: "38px sans-serif", offset: 2},
 ];
 
 Roid.colors = [
