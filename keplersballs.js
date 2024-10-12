@@ -26,11 +26,7 @@ const SHIP_CRASH_SLOWDOWN = 0.1;
 
 // bullets
 const BULLET_LIFE_MS = 1000;
-const BULLET_SIZE = 1;
 const MUZZLE_VELOCITY = 200;
-const EXCESS_DAMAGE_SPEED = 100;
-const EXCESS_DAMAGE_HP = 2;
-const EXCESS_DAMAGE_VAR = 2;
 
 // roids
 const ROID_COUNT = 7;
@@ -185,7 +181,7 @@ World.prototype.update = function(next) {
     this.smokes = smokes1;
     let bullets1 = [];
     for (let bullet of this.bullets) {
-        if (bullet.age < BULLET_LIFE_MS) {
+        if (bullet.age < bullet.life) {
             bullet.advance(dt);
             bullets1.push(bullet);
         }
@@ -204,8 +200,8 @@ World.prototype.detectCollisions = function() {
     for (let roid of this.roids) {
         let hits = 0;
         for (let bullet of this.bullets) {
-            if (roid.hit(bullet.position(), BULLET_SIZE)) {
-                hits += bullet.damage();
+            if (roid.hit(bullet.position(), bullet.radius)) {
+                hits += bullet.destroy();
             }
         }
         roid.smash(hits, roids1);
@@ -777,34 +773,51 @@ Smoke.prototype.draw = function(ctx) {
 
 function Bullet(path, heading) {
     this.path = path.copy();
-    this.path.impulse(Vec.polar(MUZZLE_VELOCITY, heading));
+    this.color = "white";
+    this.radius = 1;
+    this.damage = 1;
+    this.life = BULLET_LIFE_MS;
     this.age = 0;
+    this.path.impulse(Vec.polar(MUZZLE_VELOCITY, heading));
+    this.setCritical(this.path.vel.len() - MUZZLE_VELOCITY);
+}
+
+Bullet.speedRecord = 0;
+
+Bullet.criticals = [
+    // speed thresholds must be decreasing in this list
+    {speed: 280, color: "cyan", radius: 1.2, minhp: 8, varhp: 13, life: 100},
+    {speed: 190, color: "yellow", radius: 1.4, minhp: 4, varhp: 6, life: 200},
+    {speed: 100, color: "red", radius: 1.6, minhp: 2, varhp: 3, life: 300},
+];
+
+Bullet.prototype.setCritical = function(speed) {
     if (DEV) {
-        let speed = this.path.vel.len();
         if (speed > Bullet.speedRecord) {
             Bullet.speedRecord = speed;
             console.log("bullet speed " + speed);
         }
     }
+    for (let critical of Bullet.criticals) {
+        if (speed > critical.speed) {
+            this.color = critical.color;
+            this.radius = critical.radius;
+            let extra = Math.floor(Math.random() * critical.varhp);
+            this.damage = critical.minhp + extra;
+            this.life += critical.life;
+            break;
+        }
+    }
 }
-
-Bullet.speedRecord = 0;
 
 Bullet.prototype.advance = function(dt) {
     this.age += dt;
 }
 
 // use the bullet up and return the amount of damage caused
-Bullet.prototype.damage = function() {
-    this.age = BULLET_LIFE_MS;
-    let damage = 1;
-    let excess = this.path.vel.len() - MUZZLE_VELOCITY;
-    let bonus = Math.floor(excess / EXCESS_DAMAGE_SPEED);
-    for (let i = 0; i < bonus; i++) {
-        damage += EXCESS_DAMAGE_HP;
-        damage += Math.floor(Math.random() * EXCESS_DAMAGE_VAR);
-    }
-    return damage;
+Bullet.prototype.destroy = function() {
+    this.age = this.life;
+    return this.damage;
 }
 
 Bullet.prototype.position = function() {
@@ -812,8 +825,8 @@ Bullet.prototype.position = function() {
 }
 
 Bullet.prototype.draw = function(ctx) {
-    if (this.age < BULLET_LIFE_MS) {
-        this.position().spot(ctx, BULLET_SIZE, "#fff");
+    if (this.age < this.life) {
+        this.position().spot(ctx, this.radius, this.color);
     }
 }
 
