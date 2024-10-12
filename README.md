@@ -66,8 +66,8 @@ Galileo, with him perhaps being seen as an eccentric anomaly, while at the
 same time raising objections from astronomers such as his own teacher,
 Michael Maestlin.
 
-Kepler died in 1630 after a short illness, in Regensburg in the then-named
-Holy Roman Empire. He was buried in a Protestant churchyard that was
-subsequently destroyed during the Thirty Years' War.
+Kepler died in 1630 at the age of 59, in Regensburg in the Holy Roman Empire.
+He was buried in a Protestant churchyard that was subsequently destroyed
+during the Thirty Years' War.
 
 Relatively little is known about his balls.
