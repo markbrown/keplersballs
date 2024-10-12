@@ -859,8 +859,12 @@ Bullet.prototype.advance = function(dt) {
 
 // use the bullet up and return the amount of damage caused
 Bullet.prototype.destroy = function() {
-    this.age = this.life;
-    return this.damage;
+    if (this.age < this.life) {
+        this.age = this.life;
+        return this.damage;
+    } else {
+        return 0;
+    }
 }
 
 Bullet.prototype.position = function() {
