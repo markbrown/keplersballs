@@ -1,7 +1,7 @@
 # Kepler's Balls
 
 Perform orbital maneuvres to shoot down globular space debris,
-but watch out for the falling remnants!
+but watch out for the remnants!
 
 ## Controls
 
@@ -29,3 +29,44 @@ Extra fast bullets can score critical hits.
 
 Be careful not to fly too close to the Sun or you will be
 burned to a cinder!
+
+## Tips
+
+- Orbits are hard to change, so choose your orbit carefully.
+
+- Try to anticipate the direction that the globules will be
+coming at you from, given their orbits, and be ready to shoot them down
+before they get a chance to hit you.
+
+- Shoot down smaller globules completely before breaking up larger ones,
+otherwise you may end up in the midst of a swarm of them.
+
+## Kepler
+
+Johannes Kepler (1571-1630), was a German astronomer and mathematician
+famous for developing his three laws of planetary motion. These state that:
+
+1. The orbit of a planet is an ellipse with the Sun at one of the two foci.
+2. A line segment joining a planet and the Sun sweeps out equal areas during
+equal intervals of time.
+3. The square of a planet's orbital period is proportional to the cube of the
+length of the semi-major axis of its orbit.
+
+Kepler was a major figure in the scientific revolution of the 17th century,
+taking our understanding of orbits beyond just "epicycles" and onto a precise
+geometric formulation. His work built on Copernicus' heliocentric system,
+and laid the foundations for Isaac Newton's theory of universal gravitation.
+
+Granted, this was at a time when astronomy was considered more a part of the
+liberal arts than of "natural philosophy" (that is, physics), and indeed
+Kepler was still highly influenced by the Ptolemaic system and classical
+notions such as the "music of the spheres". As such, his work was largely
+ignored by contemporary mathematicians and physicists, like Descartes and
+Galileo, while at the same time raising objections from astronomers such
+as his own teacher, Michael Maestlin.
+
+Kepler died in 1630 in Regensburg, in the then Holy Roman Empire, after a
+short illness, and was buried in a Protestant churchyard that was completely
+destroyed during the Thirty Years' War.
+
+Relatively little is known about his balls.
