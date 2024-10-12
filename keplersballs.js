@@ -34,10 +34,11 @@ const EXCESS_DAMAGE_VAR = 2;
 
 // roids
 const ROID_COUNT = 7;
-const ROID_DISTANCE_VARIATION = 180;
+const ROID_DISTANCE_FRAC = 0.4;
+const ROID_DISTANCE_VARIATION = 30;
 const ROID_MAX_SIZE = 4;
 const ROID_SPEED_LOSS_FACTOR = 0.8;
-const ROID_SPEED_FUZZ_FACTOR = 0.3;
+const ROID_SPEED_FUZZ_FACTOR = 0.15;
 
 // visual effects
 const ORBIT_MARKER_SIZE = 2;
@@ -121,7 +122,8 @@ World.prototype.circularPath = function(radius, phi = 0) {
 }
 
 World.prototype.addRoid = function() {
-    let radius = this.width * 0.3 + (Math.random() * ROID_DISTANCE_VARIATION);
+    let radius = this.width * ROID_DISTANCE_FRAC +
+                    (Math.random() * ROID_DISTANCE_VARIATION);
     let path = this.circularPath(radius, Math.random() * TAU);
     this.roids.push(new Roid(this.mu, path));
 }
@@ -841,6 +843,7 @@ Path.prototype.impulse = function(dv) {
 Path.prototype.speedCap = function(vmax) {
     let v = this.vel.len();
     if (v > vmax) {
+        DEV && console.log("escape averted");
         this.vel = this.vel.scale(vmax / v);
     }
 }
