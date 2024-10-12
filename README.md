@@ -44,7 +44,7 @@ otherwise you may end up in the midst of a swarm of them.
 ## Kepler
 
 Johannes Kepler (1571-1630), was a German astronomer and mathematician
-famous for developing his three laws of planetary motion. These state that:
+famous for his three laws of planetary motion. These state that:
 
 1. The orbit of a planet is an ellipse with the Sun at one of the two foci.
 2. A line segment joining a planet and the Sun sweeps out equal areas during
