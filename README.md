@@ -62,11 +62,12 @@ liberal arts than of "natural philosophy" (that is, physics), and indeed
 Kepler was still highly influenced by the Ptolemaic system and classical
 notions such as the "music of the spheres". As such, his work was largely
 ignored by contemporary mathematicians and physicists, like Descartes and
-Galileo, while at the same time raising objections from astronomers such
-as his own teacher, Michael Maestlin.
+Galileo, with him perhaps being seen as an eccentric anomaly, while at the
+same time raising objections from astronomers such as his own teacher,
+Michael Maestlin.
 
-Kepler died in 1630 in Regensburg, in the then Holy Roman Empire, after a
-short illness, and was buried in a Protestant churchyard that was completely
-destroyed during the Thirty Years' War.
+Kepler died in 1630 after a short illness, in Regensburg in the then-named
+Holy Roman Empire. He was buried in a Protestant churchyard that was
+subsequently destroyed during the Thirty Years' War.
 
 Relatively little is known about his balls.
