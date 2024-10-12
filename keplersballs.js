@@ -4,6 +4,7 @@ const TAU = 2 * Math.PI;
 const DEV = false;
 
 // overlay
+const TITLE_OFFSET = 300;
 const TITLE_FONT = "100px sans-serif";
 const TITLE_TEXT = "KEPLER'S BALLS";
 const RESULT_FONT = "80px sans-serif";
@@ -13,6 +14,19 @@ const PLAY_FONT = "30px sans-serif";
 const PLAY_TEXT = "press any key to play";
 const REPLAY_TEXT = "press any key to play again";
 const REPLAY_DELAY_MS = 2000;
+const SCROLL_START = 100;
+const SCROLL_RATE = 16;
+const HELP_FONT = "24px sans-serif";
+const HELP_LINEHEIGHT = 36;
+const HELP_COL1 = 140;
+const HELP_COL2 = 400;
+const HELP = [
+    ["Thrusters:", "↑ or W"],
+    ["Turn left:", "← or A"],
+    ["Turn right:", "→ or D"],
+    ["Retro thrusters:", "↓ or S"],
+    ["Shoot:", "space"],
+];
 
 // physical constants
 const GRAVITY_FACTOR = 1e5;
@@ -58,8 +72,8 @@ function angle(theta) {
 
 function World(color = "yellow", radius = 10, path = null) {
     this.canvas = document.querySelector("#canvas");
-    this.width = canvas.width = window.innerWidth;
-    this.height = canvas.height = window.innerHeight;
+    this.width = this.canvas.width = window.innerWidth;
+    this.height = this.canvas.height = window.innerHeight;
 
     // set up Cartesian coordinates
     this.ctx = this.canvas.getContext("2d");
@@ -247,13 +261,7 @@ World.prototype.tick = function() {
     this.ship && this.ship.tick(this.ticks, this.smokes, this.bullets);
 }
 
-// clear the canvas
-World.prototype.clear = function() {
-    this.ctx.fillStyle = "#000";
-    this.ctx.fillRect(-this.width / 2, -this.height / 2,
-        this.width, this.height);
-}
-
+// draw everything
 World.prototype.draw = function(clear = true) {
     if (clear) {
         this.clear();
@@ -272,25 +280,37 @@ World.prototype.draw = function(clear = true) {
 
     // draw game overlay any time the controls are not enabled
     if (!this.running) {
+        this.overlay.scroll(this.time);
         this.overlay.draw(this.ctx);
     }
 }
 
+// clear the canvas
+World.prototype.clear = function() {
+    this.ctx.fillStyle = "#000";
+    this.ctx.fillRect(-this.width / 2, -this.height / 2,
+        this.width, this.height);
+}
+
 // keep track of the state of the game
 function Overlay(world) {
+    this.helpscroll = document.querySelector("#helpscroll");
+    this.scrollheight = this.helpscroll.offsetParent.offsetHeight;
+    this.helpheight = this.helpscroll.offsetHeight;
+
     this.world = world;
     this.title = true;
     this.victory = false;
     this.replay = false;
-    let offset = world.height / 3;
-    this.head = Vec(0, offset);
-    this.foot = Vec(0, -offset);
+    this.head = Vec(0, TITLE_OFFSET);
+    this.foot = Vec(0, -TITLE_OFFSET);
 
     addEventListener("keydown", (ev) => this.hitkey());
 }
 
 Overlay.prototype.hitkey = function() {
     if (this.title || this.replay) {
+        this.helpscroll.style.visibility = "hidden";
         this.title = false;
         this.victory = false;
         this.replay = false;
@@ -303,10 +323,20 @@ Overlay.prototype.finish = function(victory) {
     setTimeout(() => { this.replay = true; }, REPLAY_DELAY_MS);
 }
 
+Overlay.prototype.scroll = function(time) {
+    if (this.title) {
+        let avail = this.scrollheight - SCROLL_START;
+        let max = this.helpheight + this.scrollheight;
+        let scroll = Math.min(max, time * SCROLL_RATE / 1000);
+        this.helpscroll.style.marginTop = "" + (avail - scroll) + "px";
+    }
+}
+
 Overlay.prototype.draw = function(ctx) {
     if (this.title) {
         this.head.write(ctx, TITLE_FONT, TITLE_TEXT);
         this.foot.write(ctx, PLAY_FONT, PLAY_TEXT);
+        this.help(ctx);
     } else {
         if (this.victory) {
             this.head.write(ctx, RESULT_FONT, VICTORY_TEXT);
@@ -319,6 +349,19 @@ Overlay.prototype.draw = function(ctx) {
     }
 }
 
+Overlay.prototype.help = function(ctx) {
+    ctx.save();
+    let y = (HELP.length - 1) * HELP_LINEHEIGHT / 2;
+    for (let line of HELP) {
+        ctx.textAlign = "left";
+        Vec(HELP_COL1, y).write(ctx, HELP_FONT, line[0]);
+        ctx.textAlign = "center";
+        Vec(HELP_COL2, y).write(ctx, HELP_FONT, line[1]);
+        y -= HELP_LINEHEIGHT;
+    }
+    ctx.restore();
+}
+
 // keep track of which keys are currently pressed
 function KeyState() {
     this.enabled = false;
@@ -328,17 +371,17 @@ function KeyState() {
     addEventListener("keyup", (ev) => this.keyevent(ev.code, false));
 }
 
-KeyState.prototype.enable = function() {
-    this.reset();
-    this.enabled = true;
-}
-
 KeyState.prototype.reset = function() {
     this.forward = false;
     this.backward = false;
     this.left = false;
     this.right = false;
     this.trigger = false;
+}
+
+KeyState.prototype.enable = function() {
+    this.reset();
+    this.enabled = true;
 }
 
 KeyState.prototype.keyevent = function(code, val) {

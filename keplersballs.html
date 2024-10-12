@@ -9,12 +9,101 @@
       body {
         margin: 0;
         overflow: hidden;
+        background: black;
+      }
+      .flex {
+        display: flex;
+        width: 100%;
+      }
+      #canvas {
+        margin: auto;
+      }
+      .container {
+        position: absolute;
+        overflow: hidden;
+        top: 25%;
+        right: 60%;
+        width: 400px;
+        height: 50%;
+        background: transparent;
+      }
+      #helpscroll {
+        color: #ccc;
+        font: 16px sans-serif;
       }
     </style>
   </head>
   <body>
-    <canvas id="canvas">
-      <p>Game that requires a canvas.</p>
-    </canvas>
+    <div class="flex">
+      <canvas id="canvas">
+        <p>Game that requires a canvas.</p>
+      </canvas>
+      <div class="container">
+        <div id="helpscroll">
+<h2>Game play</h2>
+<p>Fire thrusters in the direction of travel
+to raise the opposite side of the orbit.
+Fire thrusters against the direction of travel
+to lower the opposite side of the orbit.
+These moves have maximum effect
+at both the lowest and highest points of the orbit.
+
+<p>Shoot or dodge any obstacles that come your way.
+If you destroy all of the debris without getting hit, you win.
+
+<p>Bullets travel farther and faster when fired in the direction of travel
+at the low point of the orbit, where the ship is moving most rapidly.
+Extra fast bullets are colored and score critical hits.
+
+<p>Be careful not to fly too close to the Sun or you will be
+burned to a cinder!
+
+<h2>Tips</h2>
+
+<ul>
+  <li>Orbits are hard to change, so choose your orbit carefully.
+  <li>Try to anticipate the direction that the globules will be coming at you
+  from, given their orbits, and be ready to shoot them down before they get a
+  chance to hit you.
+  <li>Shoot down smaller globules completely before breaking up larger ones,
+  otherwise you may end up in the midst of a swarm of them.
+</ul>
+
+<h2>About Kepler</h2>
+
+<p>Johannes Kepler (1571-1630), was a German astronomer and mathematician
+famous for his three laws of planetary motion. These state that:
+
+<ol>
+  <li>The orbit of a planet is an ellipse with the Sun at one of the two foci.
+  <li>A line segment joining a planet and the Sun sweeps out equal areas
+  during equal intervals of time.
+  <li>The square of a planet's orbital period is proportional to the cube of
+  the length of the semi-major axis of its orbit.
+</ol>
+
+<p>Kepler was a major figure in the scientific revolution of the 17th century,
+taking our understanding of orbits beyond just <q>epicycles</q> and
+onto a precise geometric formulation. His work built on Copernicus'
+heliocentric system, and laid the foundations for Isaac Newton's theory of
+universal gravitation.
+
+<p>Granted, this was at a time when astronomy was considered more a part of the
+liberal arts than of natural philosophy (that is, physics), and indeed
+Kepler was still highly influenced by the Ptolemaic system and classical
+notions such as the <q>music of the spheres.</q> As such, his work
+was largely ignored by contemporary mathematicians and physicists like
+Descartes and Galileo, with him perhaps being seen as something of an
+eccentric anomaly. At the same time, his work raised objections from
+astronomers such as his own teacher, Michael Maestlin.
+
+<p>He died in 1630 at the age of 59, in Regensburg in the Holy Roman Empire.
+He was buried in a Protestant churchyard that was subsequently destroyed
+during the Thirty Years' War.
+
+<p>Relatively little is known about his balls.
+        </div>
+      </div>
+    </div>
   </body>
 </html>
