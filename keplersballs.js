@@ -567,11 +567,21 @@ Ship.prototype.draw = function(ctx) {
     ctx.translate(this.path.pos.x, this.path.pos.y);
     ctx.rotate(this.heading);
     ctx.fillStyle = this.color;
-    // draw an isosceles triangle pointing right
+    // draw a spaceship pointing right
     ctx.beginPath();
-    ctx.moveTo(6, 0);
-    ctx.lineTo(-4, -4);
-    ctx.lineTo(-4, 4);
+    ctx.moveTo(8, 0);
+    ctx.lineTo(6, 2);
+    ctx.lineTo(1, 2);
+    ctx.lineTo(-4, 7);
+    ctx.lineTo(-6, 7);
+    ctx.lineTo(-6, 2);
+    ctx.lineTo(-8, 2);
+    ctx.lineTo(-8, -2);
+    ctx.lineTo(-6, -2);
+    ctx.lineTo(-6, -7);
+    ctx.lineTo(-4, -7);
+    ctx.lineTo(1, -2);
+    ctx.lineTo(6, -2);
     ctx.fill();
     ctx.restore();
 }
