@@ -370,7 +370,7 @@ Overlay.prototype.draw = function(ctx) {
     } else {
         if (this.victory) {
             this.head.write(ctx, RESULT_FONT, VICTORY_TEXT);
-            this.subhead.write(ctx, CLOCK_FONT, this.result);
+            this.subhead.write(ctx, CLOCK_FONT, this.result, 0, "#ccc");
         } else {
             this.head.write(ctx, RESULT_FONT, GAME_OVER_TEXT);
         }
