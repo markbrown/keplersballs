@@ -44,8 +44,8 @@ const MUZZLE_VELOCITY = 200;
 
 // roids
 const ROID_COUNT = 7;
-const ROID_DISTANCE_FRAC = 0.4;
-const ROID_DISTANCE_VARIATION = 30;
+const ROID_DISTANCE_MIN = 460;
+const ROID_DISTANCE_VAR = 50;
 const ROID_MAX_SIZE = 4;
 const ROID_SPEED_LOSS_FACTOR = 0.8;
 const ROID_SPEED_FUZZ_FACTOR = 0.15;
@@ -132,8 +132,7 @@ World.prototype.circularPath = function(radius, phi = 0) {
 }
 
 World.prototype.addRoid = function() {
-    let radius = this.width * ROID_DISTANCE_FRAC +
-                    (Math.random() * ROID_DISTANCE_VARIATION);
+    let radius = ROID_DISTANCE_MIN + (Math.random() * ROID_DISTANCE_VAR);
     let path = this.circularPath(radius, Math.random() * TAU);
     this.roids.push(new Roid(this.mu, path));
 }
@@ -829,9 +828,9 @@ Bullet.speedRecord = 0;
 
 Bullet.criticals = [
     // speed thresholds must be decreasing in this list
-    {speed: 280, color: "cyan", radius: 1, minhp: 8, varhp: 13, life: 300},
-    {speed: 190, color: "yellow", radius: 1.1, minhp: 4, varhp: 6, life: 200},
-    {speed: 100, color: "red", radius: 1.2, minhp: 2, varhp: 3, life: 100},
+    {speed: 250, color: "cyan", radius: 1, minhp: 9, varhp: 15, life: 600},
+    {speed: 180, color: "yellow", radius: 1.1, minhp: 4, varhp: 8, life: 340},
+    {speed: 130, color: "red", radius: 1.2, minhp: 2, varhp: 3, life: 160},
 ];
 
 Bullet.prototype.setCritical = function(speed) {
