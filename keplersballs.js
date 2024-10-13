@@ -3,20 +3,24 @@ const TAU = 2 * Math.PI;
 // display additional info
 const DEV = false;
 
+// fonts
+const TITLE_FONT = "100px sans-serif";
+const RESULT_FONT = "80px sans-serif";
+const CLOCK_FONT = "20px sans-serif";
+const PLAY_FONT = "30px sans-serif";
+const HELP_FONT = "24px sans-serif";
+
 // overlay
 const TITLE_OFFSET = 300;
-const TITLE_FONT = "100px sans-serif";
+const CLOCK_OFFSET = 240;
 const TITLE_TEXT = "KEPLER'S BALLS";
-const RESULT_FONT = "80px sans-serif";
 const VICTORY_TEXT = "YOU WIN!";
 const GAME_OVER_TEXT = "GAME OVER";
-const PLAY_FONT = "30px sans-serif";
 const PLAY_TEXT = "press any key to play";
 const REPLAY_TEXT = "press any key to play again";
 const REPLAY_DELAY_MS = 2000;
 const SCROLL_START = 100;
 const SCROLL_RATE = 16;
-const HELP_FONT = "24px sans-serif";
 const HELP_LINEHEIGHT = 36;
 const HELP_COL1 = 140;
 const HELP_COL2 = 400;
@@ -85,6 +89,7 @@ function World(color = "yellow", radius = 10, path = null) {
     this.ctx.textBaseline = "middle";
 
     // game state
+    this.clock = new Clock();
     this.overlay = new Overlay(this);
     this.controls = new KeyState();
     this.running = false;
@@ -98,11 +103,6 @@ function World(color = "yellow", radius = 10, path = null) {
 
     // create world objects
     this.setup(path);
-
-    // keep track of game time
-    this.last = Date.now();
-    this.time = 0;
-    this.ticks = 0;
 }
 
 World.prototype.setup = function(path = null) {
@@ -142,44 +142,19 @@ World.prototype.start = function() {
     if (!this.overlay.title) {
         this.setup();
     }
-    this.last = Date.now();
-    this.time = 0;
-    this.ticks = 0;
+    this.clock.start();
     this.controls.enable();
     this.running = true;
 }
 
 World.prototype.run = function() {
-    this.frame();
+    this.clock.frame(this);
+    this.draw();
     requestAnimationFrame(() => this.run());
 }
 
-World.prototype.frame = function() {
-    let now = Date.now();
-
-    // limit game speed so we get at least a set number of frames per tick
-    let dt = Math.min(MAX_GAME_TIME_PER_FRAME_MS, now - this.last);
-
-    // go into stasis if we lag more than a tick behind
-    this.last = Math.max(this.last + dt, now - TICK_MS);
-
-    // update the world, stopping to tick if need be
-    let next = this.time + dt;
-    if (next > this.ticks * TICK_MS) {
-        this.update(this.ticks * TICK_MS);
-        this.ticks++;
-        this.tick();
-    }
-    this.update(next);
-    this.draw();
-}
-
 // update the world each animation frame
-World.prototype.update = function(next) {
-    let dt = next - this.time;
-    if (dt <= 0) {
-        return;
-    }
+World.prototype.update = function(dt) {
     this.ship && this.ship.advance(dt);
     for (let roid of this.roids) {
         roid.advance(dt);
@@ -202,7 +177,6 @@ World.prototype.update = function(next) {
     this.bullets = bullets1;
     this.detectCollisions();
     this.detectFinish();
-    this.time = next;
 }
 
 World.prototype.detectCollisions = function() {
@@ -245,10 +219,10 @@ World.prototype.detectShipCollision = function() {
 World.prototype.detectFinish = function() {
     if (this.running) {
         if (!this.controls.enabled) {
-            this.overlay.finish(false);
+            this.overlay.finish(this.clock.text(), false);
             this.running = false;
         } else if (this.roids.length == 0) {
-            this.overlay.finish(true);
+            this.overlay.finish(this.clock.text(), true);
             this.controls.enabled = false;
             this.running = false;
         }
@@ -256,8 +230,8 @@ World.prototype.detectFinish = function() {
 }
 
 // perform actions at regular intervals
-World.prototype.tick = function() {
-    this.ship && this.ship.tick(this.ticks, this.smokes, this.bullets);
+World.prototype.tick = function(ticks) {
+    this.ship && this.ship.tick(ticks, this.smokes, this.bullets);
 }
 
 // draw everything
@@ -277,9 +251,12 @@ World.prototype.draw = function(clear = true) {
     }
     Vec().spot(this.ctx, this.radius, this.color);
 
-    // draw game overlay any time the controls are not enabled
-    if (!this.running) {
-        this.overlay.scroll(this.time);
+
+    if (this.running) {
+        this.clock.draw(this.ctx);
+    } else {
+        // draw game overlay any time the controls are not enabled
+        this.overlay.scroll(this.clock.time);
         this.overlay.draw(this.ctx);
     }
 }
@@ -289,6 +266,57 @@ World.prototype.clear = function() {
     this.ctx.fillStyle = "#000";
     this.ctx.fillRect(-this.width / 2, -this.height / 2,
         this.width, this.height);
+}
+
+// keep track of game time
+function Clock(pos = Vec(0, CLOCK_OFFSET)) {
+    this.pos = pos;
+    this.start();
+}
+
+Clock.prototype.start = function() {
+    this.last = Date.now();
+    this.time = 0;
+    this.ticks = 0;
+}
+
+// update game time from the clock and call update/tick as required
+Clock.prototype.frame = function(w) {
+    let now = Date.now();
+
+    // limit game speed so we get at least a set number of frames per tick
+    let dt = Math.min(MAX_GAME_TIME_PER_FRAME_MS, now - this.last);
+
+    // go into stasis if we lag more than a tick behind
+    this.last = Math.max(this.last + dt, now - TICK_MS);
+
+    // perform update, stopping to tick if need be
+    let next = this.time + dt;
+    if (next > this.ticks * TICK_MS) {
+        this.update(w, this.ticks * TICK_MS);
+        this.ticks++;
+        w.tick(this.ticks);
+    }
+    this.update(w, next);
+}
+
+Clock.prototype.update = function(w, next) {
+    let dt = next - this.time;
+    if (dt > 0) {
+        w.update(dt);
+    }
+    this.time = next;
+}
+
+Clock.prototype.text = function() {
+    let mins = Math.floor(this.ticks / 600);
+    let secs = Math.floor(this.ticks / 10) % 60;
+    let dec = this.ticks % 10;
+    return `${mins}m${("0" + secs).slice(-2)}.${dec}s`;
+}
+
+Clock.prototype.draw = function(ctx, color = "#f40") {
+    this.pos.write(ctx, CLOCK_FONT, this.text(), 0, color);
 }
 
 // keep track of the state of the game
@@ -301,7 +329,9 @@ function Overlay(world) {
     this.title = true;
     this.victory = false;
     this.replay = false;
+    this.result = null;
     this.head = Vec(0, TITLE_OFFSET);
+    this.subhead = Vec(0, CLOCK_OFFSET);
     this.foot = Vec(0, -TITLE_OFFSET);
 
     addEventListener("keydown", (ev) => this.hitkey());
@@ -317,8 +347,9 @@ Overlay.prototype.hitkey = function() {
     }
 }
 
-Overlay.prototype.finish = function(victory) {
+Overlay.prototype.finish = function(result, victory) {
     this.victory = victory;
+    this.result = result;
     setTimeout(() => { this.replay = true; }, REPLAY_DELAY_MS);
 }
 
@@ -339,6 +370,7 @@ Overlay.prototype.draw = function(ctx) {
     } else {
         if (this.victory) {
             this.head.write(ctx, RESULT_FONT, VICTORY_TEXT);
+            this.subhead.write(ctx, CLOCK_FONT, this.result);
         } else {
             this.head.write(ctx, RESULT_FONT, GAME_OVER_TEXT);
         }
