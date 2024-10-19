@@ -64,6 +64,16 @@ const SMOKE_FUZZ = 3.5;
 const THRUST_SMOKE_SIZE = 5;
 const RETRO_SMOKE_SIZE = 2.5;
 
+// sound effects
+const WIN_URL = "win.mp3";
+const CRASH_URL = "crash.mp3";
+const HIT_URL = "hit.mp3";
+const POP_URL = "pop.mp3";
+const POP_VARIANTS = 8;
+const SAMPLE_OFFSET = 0.5;
+const SAMPLE_LENGTH = 0.4;
+
+
 // animation
 const TICK_MS = 100;
 const MAX_GAME_TIME_PER_FRAME_MS = 25;
@@ -89,6 +99,7 @@ function World(color = "yellow", radius = 10, path = null) {
     this.ctx.textBaseline = "middle";
 
     // game state
+    this.audio = new Audio();
     this.clock = new Clock();
     this.overlay = new Overlay(this);
     this.controls = new KeyState();
@@ -188,10 +199,10 @@ World.prototype.detectCollisions = function() {
         let hits = 0;
         for (let bullet of this.bullets) {
             if (roid.hit(bullet.position(), bullet.radius)) {
-                hits += bullet.destroy();
+                hits += bullet.destroy(this.audio);
             }
         }
-        roid.smash(hits, roids1);
+        roid.smash(hits, roids1, this.audio);
     }
     this.roids = roids1;
 }
@@ -202,7 +213,7 @@ World.prototype.detectShipCollision = function() {
     // check for ship hitting a roid
     for (let roid of this.roids) {
         if (roid.hit(ship.path.pos, ship.size)) {
-            ship.crash();
+            ship.crash(this.audio);
         }
     }
 
@@ -222,6 +233,7 @@ World.prototype.detectFinish = function() {
             this.overlay.finish(this.clock.text(), false);
             this.running = false;
         } else if (this.roids.length == 0) {
+            this.audio.win();
             this.overlay.finish(this.clock.text(), true);
             this.controls.enabled = false;
             this.running = false;
@@ -266,6 +278,54 @@ World.prototype.clear = function() {
     this.ctx.fillStyle = "#000";
     this.ctx.fillRect(-this.width / 2, -this.height / 2,
         this.width, this.height);
+}
+
+function Audio() {
+    this.ctx = new AudioContext();
+    (async () => {
+        this.winBuffer = await this.load(WIN_URL);
+        this.crashBuffer = await this.load(CRASH_URL);
+        this.hitBuffer = await this.load(HIT_URL);
+        this.popBuffer = await this.load(POP_URL);
+    })();
+}
+
+Audio.prototype.load = function(url) {
+    return fetch(url)
+        .then(response => response.arrayBuffer())
+        .then(data => this.ctx.decodeAudioData(data));
+}
+
+Audio.prototype.win = function() {
+    this.playBuffer(this.winBuffer);
+}
+
+Audio.prototype.crash = function() {
+    this.playBuffer(this.crashBuffer);
+}
+
+Audio.prototype.hit = function(sample) {
+    this.playSample(this.hitBuffer, sample);
+}
+
+Audio.prototype.pop = function(size) {
+    let variant = Math.floor(Math.random() * POP_VARIANTS);
+    let sample = variant * ROID_MAX_SIZE + size - 1;
+    this.playSample(this.popBuffer, sample);
+}
+
+Audio.prototype.playBuffer = function(buffer) {
+    let source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(this.ctx.destination);
+    source.start();
+}
+
+Audio.prototype.playSample = function(buffer, sample) {
+    let source = this.ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(this.ctx.destination);
+    source.start(0, sample * SAMPLE_OFFSET, SAMPLE_LENGTH);
 }
 
 // keep track of game time
@@ -556,8 +616,9 @@ Ship.prototype.thrust = function(dv) {
 }
 
 // ship is hit by a roid
-Ship.prototype.crash = function() {
+Ship.prototype.crash = function(audio) {
     if (!this.crashed) {
+        audio.crash();
         this.die();
         this.crashed = true;
         this.path.vel = this.path.vel.scale(SHIP_CRASH_SLOWDOWN);
@@ -666,22 +727,25 @@ Roid.prototype.hit = function(pos, radius = 0) {
 }
 
 // take a bullet hit
-Roid.prototype.smash = function(hits, roids) {
+Roid.prototype.smash = function(hits, roids, audio) {
     if (this.hp > hits) {
         this.hp -= hits;
         // keep this roid
         roids.push(this);
-    } else if (this.size > 1) {
-        let mu = this.orbit.mu;
-        let size = this.size - 1;
-        let pos = this.path.pos;
-        let side = pos.unit().scale(this.info.radius / 3);;
-        let vel = this.path.vel.scale(ROID_SPEED_LOSS_FACTOR);
-        let path1 = new Path(pos.plus(side), vel);
-        let path2 = new Path(pos.minus(side), vel);
-        // keep the remnants
-        roids.push(new Roid(mu, new Path(pos.plus(side), vel), size));
-        roids.push(new Roid(mu, new Path(pos.minus(side), vel), size));
+    } else {
+        audio.pop(this.size);
+        if (this.size > 1) {
+            let mu = this.orbit.mu;
+            let size = this.size - 1;
+            let pos = this.path.pos;
+            let side = pos.unit().scale(this.info.radius / 3);;
+            let vel = this.path.vel.scale(ROID_SPEED_LOSS_FACTOR);
+            let path1 = new Path(pos.plus(side), vel);
+            let path2 = new Path(pos.minus(side), vel);
+            // keep the remnants
+            roids.push(new Roid(mu, new Path(pos.plus(side), vel), size));
+            roids.push(new Roid(mu, new Path(pos.minus(side), vel), size));
+        }
     }
 }
 
@@ -861,6 +925,7 @@ function Bullet(path, heading) {
     this.radius = 1;
     this.damage = 1;
     this.life = BULLET_LIFE_MS;
+    this.sample = 0;
     this.age = 0;
     this.path.impulse(Vec.polar(MUZZLE_VELOCITY, heading));
     this.setCritical(this.path.vel.len() - MUZZLE_VELOCITY);
@@ -870,9 +935,30 @@ Bullet.speedRecord = 0;
 
 Bullet.criticals = [
     // speed thresholds must be decreasing in this list
-    {speed: 250, color: "cyan", radius: 1, minhp: 9, varhp: 15, life: 600},
-    {speed: 180, color: "yellow", radius: 1.1, minhp: 4, varhp: 8, life: 340},
-    {speed: 130, color: "red", radius: 1.2, minhp: 2, varhp: 3, life: 160},
+    {speed: 250,
+        color: "cyan",
+        radius: 1,
+        sample: 3,
+        minhp: 9,
+        varhp: 15,
+        life: 600,
+    },
+    {speed: 180,
+        color: "yellow",
+        radius: 1.1,
+        sample: 2,
+        minhp: 4,
+        varhp: 8,
+        life: 340,
+    },
+    {speed: 130,
+        color: "red",
+        radius: 1.2,
+        sample: 1,
+        minhp: 2,
+        varhp: 3,
+        life: 160,
+    },
 ];
 
 Bullet.prototype.setCritical = function(speed) {
@@ -886,6 +972,7 @@ Bullet.prototype.setCritical = function(speed) {
         if (speed > critical.speed) {
             this.color = critical.color;
             this.radius = critical.radius;
+            this.sample = critical.sample;
             let extra = Math.floor(Math.random() * critical.varhp);
             this.damage = critical.minhp + extra;
             this.life += critical.life;
@@ -899,9 +986,10 @@ Bullet.prototype.advance = function(dt) {
 }
 
 // use the bullet up and return the amount of damage caused
-Bullet.prototype.destroy = function() {
+Bullet.prototype.destroy = function(audio) {
     if (this.age < this.life) {
         this.age = this.life;
+        audio.hit(this.sample);
         return this.damage;
     } else {
         return 0;
