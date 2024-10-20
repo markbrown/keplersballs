@@ -37,8 +37,8 @@ const GRAVITY_FACTOR = 1e5;
 const SHIP_SIZE = 5;
 const TURN_RAD_PER_SEC = TAU;
 const TURN_RAMP_RATE = 5 * TAU;
-const THRUST_ACCEL = 10;
-const RETRO_ACCEL = 6;
+const THRUST_ACCEL = 11;
+const RETRO_ACCEL = 8;
 const SPEED_CAP = 0.98;
 const SHIP_CRASH_SLOWDOWN = 0.1;
 
@@ -48,8 +48,8 @@ const MUZZLE_VELOCITY = 200;
 
 // roids
 const ROID_COUNT = 7;
-const ROID_DISTANCE_MIN = 460;
-const ROID_DISTANCE_VAR = 50;
+const ROID_DISTANCE_MIN = 400;
+const ROID_DISTANCE_VAR = 60;
 const ROID_MAX_SIZE = 4;
 const ROID_SPEED_LOSS_FACTOR = 0.8;
 const ROID_SPEED_FUZZ_FACTOR = 0.15;
