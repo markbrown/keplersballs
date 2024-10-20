@@ -64,6 +64,10 @@ const SMOKE_EXPANSION_RATE = 4;
 const SMOKE_FUZZ = 3.5;
 const THRUST_SMOKE_SIZE = 5;
 const RETRO_SMOKE_SIZE = 2.5;
+const DEBRIS_LIFE_MS = 100;
+const DEBRIS_BASE_SPEED = 500;
+const DEBRIS_SIZE_FACTOR = 0.2;
+const DEBRIS_COUNT = 9;
 
 // sound effects
 const WIN_URL = "win.mp3";
@@ -74,7 +78,6 @@ const POP_URL = "pop.mp3";
 const POP_VARIANTS = 4;
 const SAMPLE_OFFSET = 0.5;
 const SAMPLE_LENGTH = 0.4;
-
 
 // animation
 const TICK_MS = 100;
@@ -127,6 +130,7 @@ World.prototype.setup = function(path = null) {
 
     // other objects
     this.smokes = [];
+    this.debriss = [];
     this.bullets = [];
     this.roids = [];
 
@@ -183,6 +187,14 @@ World.prototype.update = function(dt) {
         }
     }
     this.smokes = smokes1;
+    let debriss1 = [];
+    for (let debris of this.debriss) {
+        if (debris.age < DEBRIS_LIFE_MS) {
+            debris.advance(dt);
+            debriss1.push(debris);
+        }
+    }
+    this.debriss = debriss1;
     let bullets1 = [];
     for (let bullet of this.bullets) {
         if (bullet.age < bullet.life) {
@@ -207,7 +219,7 @@ World.prototype.detectCollisions = function() {
                 hits += bullet.destroy(roid.size, this.audio);
             }
         }
-        roid.smash(hits, roids1, this.audio);
+        roid.smash(hits, roids1, this.debriss, this.audio);
     }
     this.roids = roids1;
 }
@@ -258,6 +270,9 @@ World.prototype.draw = function(clear = true) {
     }
     for (let smoke of this.smokes) {
         smoke.draw(this.ctx);
+    }
+    for (let debris of this.debriss) {
+        debris.draw(this.ctx);
     }
     for (let bullet of this.bullets) {
         bullet.draw(this.ctx);
@@ -740,13 +755,16 @@ Roid.prototype.hit = function(pos, radius = 0) {
 }
 
 // take a bullet hit
-Roid.prototype.smash = function(hits, roids, audio) {
+Roid.prototype.smash = function(hits, roids, debriss, audio) {
     if (this.hp > hits) {
         this.hp -= hits;
         // keep this roid
         roids.push(this);
     } else {
         audio.pop(this.size);
+        for (let i = 0; i < DEBRIS_COUNT; i++) {
+            debriss.push(new Debris(this.path, this.color, this.info.radius));
+        }
         if (this.size > 1) {
             let mu = this.orbit.mu;
             let size = this.size - 1;
@@ -930,6 +948,29 @@ Smoke.prototype.draw = function(ctx) {
     let frac = Math.max(0, 1 - this.age / SMOKE_LIFE_MS);
     let alpha = 0.5 * frac ** 2;
     this.pos.spot(ctx, currentradius, `rgb(192 192 192 / ${alpha})`);
+}
+
+function Debris(path, color, origRadius) {
+    let scale = 1 + Math.random();
+
+    this.path = path.copy();
+    this.color = color;
+    this.radius = origRadius * DEBRIS_SIZE_FACTOR / scale;
+    this.age = 0;
+
+    let speed = scale * DEBRIS_BASE_SPEED;
+    this.path.impulse(Vec.polar(speed, TAU * Math.random()));
+}
+
+Debris.prototype.advance = function(dt) {
+    this.age += dt;
+}
+
+Debris.prototype.draw = function(ctx) {
+    if (this.age < DEBRIS_LIFE_MS) {
+        let pos = this.path.position(this.age);
+        pos.spot(ctx, this.radius, this.color);
+    }
 }
 
 function Bullet(path, heading) {
