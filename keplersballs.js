@@ -43,6 +43,7 @@ const SPEED_CAP = 0.98;
 const SHIP_CRASH_SLOWDOWN = 0.1;
 
 // bullets
+const BULLET_RADIUS = 1;
 const BULLET_LIFE_MS = 1000;
 const MUZZLE_VELOCITY = 200;
 
@@ -68,6 +69,7 @@ const RETRO_SMOKE_SIZE = 2.5;
 const WIN_URL = "win.mp3";
 const CRASH_URL = "crash.mp3";
 const HIT_URL = "hit.mp3";
+const CRIT_URL = "crit.mp3";
 const POP_URL = "pop.mp3";
 const POP_VARIANTS = 4;
 const SAMPLE_OFFSET = 0.5;
@@ -199,7 +201,7 @@ World.prototype.detectCollisions = function() {
         let hits = 0;
         for (let bullet of this.bullets) {
             if (roid.hit(bullet.position(), bullet.radius)) {
-                hits += bullet.destroy(this.audio);
+                hits += bullet.destroy(roid.size, this.audio);
             }
         }
         roid.smash(hits, roids1, this.audio);
@@ -286,6 +288,7 @@ function Audio() {
         this.winBuffer = await this.load(WIN_URL);
         this.crashBuffer = await this.load(CRASH_URL);
         this.hitBuffer = await this.load(HIT_URL);
+        this.critBuffer = await this.load(CRIT_URL);
         this.popBuffer = await this.load(POP_URL);
     })();
 }
@@ -304,8 +307,14 @@ Audio.prototype.crash = function() {
     this.playBuffer(this.crashBuffer);
 }
 
-Audio.prototype.hit = function(sample) {
+Audio.prototype.hit = function(size) {
+    // sample 1 sounds best
+    let sample = 1;
     this.playSample(this.hitBuffer, sample);
+}
+
+Audio.prototype.crit = function(sample) {
+    this.playSample(this.critBuffer, sample);
 }
 
 Audio.prototype.pop = function(size) {
@@ -922,12 +931,11 @@ Smoke.prototype.draw = function(ctx) {
 
 function Bullet(path, heading) {
     this.path = path.copy();
-    this.color = "white";
-    this.radius = 1;
-    this.damage = 1;
     this.life = BULLET_LIFE_MS;
-    this.sample = 0;
     this.age = 0;
+    this.critical = null;
+
+    // fire the bullet
     this.path.impulse(Vec.polar(MUZZLE_VELOCITY, heading));
     this.setCritical(this.path.vel.len() - MUZZLE_VELOCITY);
 }
@@ -936,30 +944,9 @@ Bullet.speedRecord = 0;
 
 Bullet.criticals = [
     // speed thresholds must be decreasing in this list
-    {speed: 250,
-        color: "cyan",
-        radius: 1,
-        sample: 3,
-        minhp: 9,
-        varhp: 15,
-        life: 600,
-    },
-    {speed: 180,
-        color: "yellow",
-        radius: 1.1,
-        sample: 2,
-        minhp: 4,
-        varhp: 8,
-        life: 340,
-    },
-    {speed: 130,
-        color: "red",
-        radius: 1.2,
-        sample: 1,
-        minhp: 2,
-        varhp: 3,
-        life: 160,
-    },
+    {speed: 250, color: "cyan", sample: 2, minhp: 14, varhp: 15, life: 800},
+    {speed: 180, color: "yellow", sample: 1, minhp: 4, varhp: 8, life: 480},
+    {speed: 130, color: "red", sample: 0, minhp: 2, varhp: 3, life: 180},
 ];
 
 Bullet.prototype.setCritical = function(speed) {
@@ -971,11 +958,7 @@ Bullet.prototype.setCritical = function(speed) {
     }
     for (let critical of Bullet.criticals) {
         if (speed > critical.speed) {
-            this.color = critical.color;
-            this.radius = critical.radius;
-            this.sample = critical.sample;
-            let extra = Math.floor(Math.random() * critical.varhp);
-            this.damage = critical.minhp + extra;
+            this.critical = critical;
             this.life += critical.life;
             break;
         }
@@ -987,13 +970,19 @@ Bullet.prototype.advance = function(dt) {
 }
 
 // use the bullet up and return the amount of damage caused
-Bullet.prototype.destroy = function(audio) {
-    if (this.age < this.life) {
-        this.age = this.life;
-        audio.hit(this.sample);
-        return this.damage;
-    } else {
+Bullet.prototype.destroy = function(size, audio) {
+    if (this.age >= this.life) {
         return 0;
+    } else {
+        this.age = this.life;
+        if (this.critical) {
+            audio.crit(this.critical.sample);
+            let extra = Math.floor(Math.random() * this.critical.varhp);
+            return this.critical.minhp + extra;
+        } else {
+            audio.hit(size);
+            return 1;
+        }
     }
 }
 
@@ -1003,7 +992,8 @@ Bullet.prototype.position = function() {
 
 Bullet.prototype.draw = function(ctx) {
     if (this.age < this.life) {
-        this.position().spot(ctx, this.radius, this.color);
+        let color = this.critical ? this.critical.color : "white";
+        this.position().spot(ctx, BULLET_RADIUS, color);
     }
 }
 
