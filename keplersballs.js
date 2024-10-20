@@ -315,17 +315,18 @@ Audio.prototype.pop = function(size) {
 }
 
 Audio.prototype.playBuffer = function(buffer) {
-    let source = this.ctx.createBufferSource();
-    source.buffer = buffer;
-    source.connect(this.ctx.destination);
-    source.start();
+    this.makeSource(buffer).start();
 }
 
 Audio.prototype.playSample = function(buffer, sample) {
+    this.makeSource(buffer).start(0, sample * SAMPLE_OFFSET, SAMPLE_LENGTH);
+}
+
+Audio.prototype.makeSource = function(buffer) {
     let source = this.ctx.createBufferSource();
     source.buffer = buffer;
     source.connect(this.ctx.destination);
-    source.start(0, sample * SAMPLE_OFFSET, SAMPLE_LENGTH);
+    return source;
 }
 
 // keep track of game time
