@@ -572,6 +572,7 @@ function Ship(controls, mu, path, heading = TAU / 4) {
     // rate of turn
     this.left = new Turn();
     this.right = new Turn();
+    this.deadturn = 0;
 
     // ship state
     this.size = SHIP_SIZE;
@@ -597,9 +598,8 @@ Ship.prototype.determineOrbit = function() {
 }
 
 Ship.prototype.advance = function(dt) {
+    let ds = dt / 1000;
     if (this.alive()) {
-        let ds = dt / 1000;
-
         // steering
         if (this.controls.left) {
             this.heading += this.left.turn(ds);
@@ -613,7 +613,6 @@ Ship.prototype.advance = function(dt) {
         } else {
             this.right.decay(ds);
         }
-        this.heading = angle(this.heading);
 
         // thrust
         if (this.controls.forward) {
@@ -621,11 +620,15 @@ Ship.prototype.advance = function(dt) {
         } else if (this.controls.backward) {
             this.thrust(-ds * RETRO_ACCEL);
         }
-    } else if (this.orbit.phi > TAU / 4 && this.orbit.phi < TAU / 2) {
-        // we hit the sun earlier and have now left, dead but not gone,
-        // but we will burn up completely next time we hit
-        this.toast = true;
+    } else {
+        this.heading += this.deadturn * ds;
+        if (this.orbit.phi > TAU / 4 && this.orbit.phi < TAU / 2) {
+            // we hit the sun earlier and have now left, dead but not gone,
+            // but we will burn up completely next time we hit
+            this.toast = true;
+        }
     }
+    this.heading = angle(this.heading);
 
     // move ship in orbit
     this.orbit.advance(dt);
@@ -657,6 +660,7 @@ Ship.prototype.crash = function(audio) {
 Ship.prototype.die = function() {
     this.controls.enabled = false;
     this.color = "SlateGrey";
+    this.deadturn = (0.5 - Math.random()) * TURN_RAD_PER_SEC;
 }
 
 Ship.prototype.tick = function(ticks, smokes, bullets) {
@@ -995,7 +999,7 @@ Bullet.speedRecord = 0;
 
 Bullet.criticals = [
     // speed thresholds must be decreasing in this list
-    {speed: 250, color: "cyan", sample: 2, minhp: 16, varhp: 25, life: 800},
+    {speed: 250, color: "cyan", sample: 2, minhp: 16, varhp: 25, life: 1200},
     {speed: 180, color: "yellow", sample: 1, minhp: 8, varhp: 14, life: 480},
     {speed: 130, color: "red", sample: 0, minhp: 4, varhp: 6, life: 180},
 ];
