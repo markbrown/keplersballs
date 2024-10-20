@@ -69,7 +69,7 @@ const WIN_URL = "win.mp3";
 const CRASH_URL = "crash.mp3";
 const HIT_URL = "hit.mp3";
 const POP_URL = "pop.mp3";
-const POP_VARIANTS = 8;
+const POP_VARIANTS = 4;
 const SAMPLE_OFFSET = 0.5;
 const SAMPLE_LENGTH = 0.4;
 
