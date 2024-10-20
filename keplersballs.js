@@ -64,8 +64,8 @@ const SMOKE_EXPANSION_RATE = 4;
 const SMOKE_FUZZ = 3.5;
 const THRUST_SMOKE_SIZE = 5;
 const RETRO_SMOKE_SIZE = 2.5;
-const DEBRIS_LIFE_MS = 100;
-const DEBRIS_BASE_SPEED = 500;
+const DEBRIS_LIFE_MS = 200;
+const DEBRIS_BASE_SPEED = 250;
 const DEBRIS_SIZE_FACTOR = 0.2;
 const DEBRIS_COUNT = 9;
 
@@ -955,11 +955,12 @@ function Debris(path, color, origRadius) {
 
     this.path = path.copy();
     this.color = color;
-    this.radius = origRadius * DEBRIS_SIZE_FACTOR / scale;
+    this.radius = origRadius * DEBRIS_SIZE_FACTOR / scale ** 2;
     this.age = 0;
 
     let speed = scale * DEBRIS_BASE_SPEED;
     this.path.impulse(Vec.polar(speed, TAU * Math.random()));
+    this.path.pos = this.path.position(origRadius / speed);
 }
 
 Debris.prototype.advance = function(dt) {
