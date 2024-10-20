@@ -101,7 +101,7 @@ function World(color = "yellow", radius = 10, path = null) {
     this.ctx.textBaseline = "middle";
 
     // game state
-    this.audio = new Audio();
+    this.audio = null;
     this.clock = new Clock();
     this.overlay = new Overlay(this);
     this.controls = new KeyState();
@@ -152,6 +152,9 @@ World.prototype.addRoid = function() {
 
 // called from `Overlay` when a key is pressed
 World.prototype.start = function() {
+    if (!this.audio) {
+        this.audio = new Audio();
+    }
     if (!this.overlay.title) {
         this.setup();
     }
