@@ -995,9 +995,9 @@ Bullet.speedRecord = 0;
 
 Bullet.criticals = [
     // speed thresholds must be decreasing in this list
-    {speed: 250, color: "cyan", sample: 2, minhp: 14, varhp: 15, life: 800},
-    {speed: 180, color: "yellow", sample: 1, minhp: 4, varhp: 8, life: 480},
-    {speed: 130, color: "red", sample: 0, minhp: 2, varhp: 3, life: 180},
+    {speed: 250, color: "cyan", sample: 2, minhp: 16, varhp: 25, life: 800},
+    {speed: 180, color: "yellow", sample: 1, minhp: 8, varhp: 14, life: 480},
+    {speed: 130, color: "red", sample: 0, minhp: 4, varhp: 6, life: 180},
 ];
 
 Bullet.prototype.setCritical = function(speed) {
