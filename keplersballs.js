@@ -773,9 +773,15 @@ Roid.prototype.smash = function(hits, roids, debriss, audio) {
             let vel = this.path.vel.scale(ROID_SPEED_LOSS_FACTOR);
             let path1 = new Path(pos.plus(side), vel);
             let path2 = new Path(pos.minus(side), vel);
-            // keep the remnants
-            roids.push(new Roid(mu, new Path(pos.plus(side), vel), size));
-            roids.push(new Roid(mu, new Path(pos.minus(side), vel), size));
+            // create remnants
+            let r1 = new Roid(mu, new Path(pos.plus(side), vel), size);
+            let r2 = new Roid(mu, new Path(pos.minus(side), vel), size);
+            // keep doing damage
+            let excess = hits - this.hp;
+            let hits1 = Math.floor(excess * Math.random());
+            let hits2 = excess - hits1;
+            r1.smash(hits1, roids, debriss, audio);
+            r2.smash(hits2, roids, debriss, audio);
         }
     }
 }
