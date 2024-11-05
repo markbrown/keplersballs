@@ -2,9 +2,9 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 
 module.exports = {
-  mode: "production",
+  mode: "development",
   entry: "./src/main.js",
-  // devtool: "source-map",
+  devtool: "source-map",
   devServer: {
     static: "./dist",
   },
@@ -25,7 +25,7 @@ module.exports = {
         use: ['style-loader', 'css-loader'],
       },
       {
-        test: /\.mp3$/i,
+        test: /\.(mp3|svg)$/i,
         type: "asset/resource",
       },
     ],

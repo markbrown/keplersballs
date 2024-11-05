@@ -1,8 +1,9 @@
 body {
     margin: 0;
+    direction: ltr;
 }
 
-.flex {
+#container {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -16,7 +17,18 @@ body {
     align-self: center;
 }
 
-.container {
+#buttons {
+    position: absolute;
+    display: flex;
+    flex-direction: row-reverse;
+    column-gap: 16px;
+    justify-content: right;
+    height: 32px;
+    top: 16px;
+    right: 16px;
+}
+
+.help {
     position: absolute;
     overflow: hidden;
     top: 25%;

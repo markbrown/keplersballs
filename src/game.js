@@ -1,4 +1,5 @@
 import Audio from "./audio.js";
+import Buttons from "./buttons.js";
 import Clock from "./clock.js";
 import Controls from "./controls.js";
 import Help from "./help.js";
@@ -22,8 +23,9 @@ export default function Game() {
     this.sub = Vec(0, Game.CLOCK_OFFSET);
     this.foot = Vec(0, -Game.TITLE_OFFSET);
 
-    // keyboard state
+    // input
     this.controls = new Controls();
+    this.buttons = new Buttons(this);
 
     // game state
     this.title = true;
