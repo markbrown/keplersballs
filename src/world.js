@@ -32,6 +32,10 @@ function World(controls, audio = null, color = "yellow", radius = 10) {
     for (let i = 0; i < World.ROID_COUNT; i++) {
         this.addRoid();
     }
+
+    // progress
+    this.progress = 0;
+    this.total = World.ROID_COUNT * (2 ** Roid.info.length - 1)
 }
 
 World.GRAVITY_FACTOR = 1e5;
@@ -95,7 +99,7 @@ World.prototype.collisions = function() {
                 hits += bullet.hit(this.audio);
             }
         });
-        roid.smash(hits, roids, this.effects, this.audio);
+        this.progress += roid.smash(hits, roids, this.effects, this.audio);
     });
     this.roids = roids;
 

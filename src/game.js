@@ -45,11 +45,15 @@ Game.WIDTH = 1280;
 Game.HEIGHT = 720;
 Game.TITLE_OFFSET = 260;
 Game.CLOCK_OFFSET = 200;
+Game.PROGRESS_OFFSET = 320;
+Game.PROGRESS_HEIGHT = 16;
+Game.PROGRESS_WIDTH = 480;
 
 Game.REPLAY_DELAY_MS = 2000;
 
 Game.CLOCK_COLOR = "#f40";
 Game.WIN_COLOR = "#ccc";
+Game.PROGRESS_COLOR = "blue";
 
 Game.TITLE_TEXT = "KEPLER'S BALLS";
 Game.WIN_TEXT = "YOU WIN!";
@@ -110,8 +114,18 @@ Game.prototype.draw = function() {
         this.help.scroll(this.clock.time);
         this.help.draw(this.ctx);
     } else if (this.running) {
+        // time
         let text = this.clock.text();
         this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.CLOCK_COLOR);
+
+        // progress bar
+        let frac = this.world.progress / this.world.total;
+        this.ctx.strokeStyle = Game.PROGRESS_COLOR;
+        this.ctx.fillStyle = Game.PROGRESS_COLOR;
+        this.ctx.strokeRect(-Game.PROGRESS_WIDTH / 2, Game.PROGRESS_OFFSET,
+            Game.PROGRESS_WIDTH, Game.PROGRESS_HEIGHT);
+        this.ctx.fillRect(-Game.PROGRESS_WIDTH / 2, Game.PROGRESS_OFFSET,
+            frac * Game.PROGRESS_WIDTH, Game.PROGRESS_HEIGHT);
     } else {
         if (this.result) {
             this.head.write(this.ctx, Game.RESULT_FONT, Game.WIN_TEXT);

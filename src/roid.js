@@ -62,17 +62,19 @@ Roid.prototype.collide = function(pos, radius = 0) {
     return r.sqr() < (this.radius + radius) ** 2;
 }
 
-// take a bullet hit
+// take a bullet hit and return the number of pops
 Roid.prototype.smash = function(hits, roids, effects, audio) {
     if (this.hp > hits) {
         this.hp -= hits;
         // keep this roid
         roids.push(this);
+        return 0;
     } else {
         audio.pop(this.size);
         for (let i = 0; i < Roid.DEBRIS; i++) {
             effects.push(new Debris(this.orbit.path, this.color, this.radius));
         }
+        let result = 1;
         if (this.size > 0) {
             let mu = this.orbit.mu;
             let size = this.size - 1;
@@ -86,9 +88,10 @@ Roid.prototype.smash = function(hits, roids, effects, audio) {
             let excess = hits - this.hp;
             let hits1 = Math.floor(excess * Math.random());
             let hits2 = excess - hits1;
-            r1.smash(hits1, roids, effects, audio);
-            r2.smash(hits2, roids, effects, audio);
+            result += r1.smash(hits1, roids, effects, audio);
+            result += r2.smash(hits2, roids, effects, audio);
         }
+        return result;
     }
 }
 
