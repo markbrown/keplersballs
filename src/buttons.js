@@ -1,5 +1,8 @@
+import Audio from "./audio.js";
 import Expand from "./expand.svg";
 import Retract from "./retract.svg";
+import Speaker from "./speaker.svg";
+import SpeakerOff from "./speakeroff.svg";
 
 export default function Buttons(game) {
     this.game = game;
@@ -15,6 +18,11 @@ export default function Buttons(game) {
         document.addEventListener("fullscreenchange",
             (e) => this.fullscreenChange());
     }
+
+    this.mute = new Image();
+    this.mute.src = Speaker;
+    this.mute.addEventListener("click", (e) => this.doMute());
+    this.buttons.appendChild(this.mute);
 }
 
 Buttons.prototype.doFullscreen = function() {
@@ -30,6 +38,19 @@ Buttons.prototype.fullscreenChange = function() {
         this.fullscreen.src = Retract;
     } else {
         this.fullscreen.src = Expand;
+    }
+}
+
+Buttons.prototype.doMute = function() {
+    if (!this.game.audio) {
+        this.mute.src = SpeakerOff;
+        this.game.audio = new Audio(false);
+    } else if (this.game.audio.enabled) {
+        this.mute.src = SpeakerOff;
+        this.game.audio.disable();
+    } else {
+        this.mute.src = Speaker;
+        this.game.audio.enable();
     }
 }
 

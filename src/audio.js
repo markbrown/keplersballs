@@ -5,7 +5,8 @@ import Hit from "./hit.mp3";
 import Pop from "./pop.mp3";
 import Win from "./win.mp3";
 
-export default function Audio() {
+export default function Audio(enabled = true) {
+    this.enabled = enabled;
     this.ctx = new AudioContext();
     (async () => {
         this.crashBuffer = await this.load(Crash);
@@ -13,6 +14,12 @@ export default function Audio() {
         this.popBuffer = await this.load(Pop);
         this.winBuffer = await this.load(Win);
     })();
+
+    this.gainNode = this.ctx.createGain();
+    this.gainNode.connect(this.ctx.destination);
+    if (!enabled) {
+        this.disable();
+    }
 }
 
 Audio.SAMPLE_OFFSET = 0.5;
@@ -23,6 +30,16 @@ Audio.prototype.load = function(url) {
     return fetch(url)
         .then(response => response.arrayBuffer())
         .then(data => this.ctx.decodeAudioData(data));
+}
+
+Audio.prototype.enable = function() {
+    this.gainNode.gain.value = 1;
+    this.enabled = true;
+}
+
+Audio.prototype.disable = function() {
+    this.gainNode.gain.value = 0;
+    this.enabled = false;
 }
 
 Audio.prototype.crash = function() {
@@ -55,7 +72,7 @@ Audio.prototype.playSample = function(buffer, sample) {
 Audio.prototype.makeSource = function(buffer) {
     let source = this.ctx.createBufferSource();
     source.buffer = buffer;
-    source.connect(this.ctx.destination);
+    source.connect(this.gainNode);
     return source;
 }
 
