@@ -1,0 +1,30 @@
+{
+  "name": "keplersballs",
+  "version": "1.0.0",
+  "description": "Orbital mechanics game",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "webpack --watch",
+    "start": "webpack serve --open",
+    "build": "webpack"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/markbrown/keplersballs.git"
+  },
+  "author": "Mark Brown",
+  "license": "CC-BY-SA-4.0",
+  "bugs": {
+    "url": "https://github.com/markbrown/keplersballs/issues"
+  },
+  "homepage": "https://github.com/markbrown/keplersballs#readme",
+  "devDependencies": {
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.3",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.1.0"
+  }
+}

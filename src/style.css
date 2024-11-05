@@ -1,0 +1,41 @@
+body {
+    margin: 0;
+}
+
+.flex {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    background: #222;
+}
+
+#canvas {
+    height: 100vh;
+    min-height: 720px;
+    align-self: center;
+}
+
+.container {
+    position: absolute;
+    overflow: hidden;
+    top: 25%;
+    right: calc(50% + 128px);
+    width: 450px;
+    height: 50%;
+    background: transparent;
+}
+
+#helpscroll {
+    margin-top: 1000px;
+    color: #bbb;
+    font: 18px sans-serif;
+}
+
+#helpscroll > :first-child {
+    margin-top: 0;
+}
+
+#helpscroll > h2 {
+    color: #ddd;
+}
