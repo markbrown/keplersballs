@@ -41,8 +41,8 @@ function World(controls, audio = null, color = "yellow", radius = 10) {
 World.GRAVITY_FACTOR = 1e5;
 World.START_RADIUS_FACTOR = 10;
 World.ROID_COUNT = 7;
-World.ROID_MIN = 400;
-World.ROID_VAR = 60;
+World.ROID_MIN = 380;
+World.ROID_VAR = 40;
 
 // return a path for a circular orbit
 World.prototype.circle = function(radius, theta = 0) {

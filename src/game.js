@@ -51,9 +51,9 @@ Game.PROGRESS_WIDTH = 480;
 
 Game.REPLAY_DELAY_MS = 2000;
 
-Game.CLOCK_COLOR = "#f40";
+Game.CLOCK_COLOR = "DarkOrange";
 Game.WIN_COLOR = "#ccc";
-Game.PROGRESS_COLOR = "blue";
+Game.PROGRESS_COLOR = "RoyalBlue";
 
 Game.TITLE_TEXT = "KEPLER'S BALLS";
 Game.WIN_TEXT = "YOU WIN!";
