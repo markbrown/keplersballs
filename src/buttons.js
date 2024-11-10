@@ -1,5 +1,7 @@
 import Audio from "./audio.js";
 import Expand from "./expand.svg";
+import Quavers from "./quavers.svg";
+import QuaversOff from "./quaversoff.svg";
 import Retract from "./retract.svg";
 import Speaker from "./speaker.svg";
 import SpeakerOff from "./speakeroff.svg";
@@ -19,10 +21,15 @@ export default function Buttons(game) {
             (e) => this.fullscreenChange());
     }
 
-    this.mute = new Image();
-    this.mute.src = Speaker;
-    this.mute.addEventListener("click", (e) => this.doMute());
-    this.buttons.appendChild(this.mute);
+    this.fx = new Image();
+    this.fx.src = Speaker;
+    this.fx.addEventListener("click", (e) => this.doFx());
+    this.buttons.appendChild(this.fx);
+
+    this.music= new Image();
+    this.music.src = Quavers;
+    this.music.addEventListener("click", (e) => this.doMusic());
+    this.buttons.appendChild(this.music);
 }
 
 Buttons.prototype.doFullscreen = function() {
@@ -41,16 +48,23 @@ Buttons.prototype.fullscreenChange = function() {
     }
 }
 
-Buttons.prototype.doMute = function() {
-    if (!this.game.audio) {
-        this.mute.src = SpeakerOff;
-        this.game.audio = new Audio(false);
-    } else if (this.game.audio.enabled) {
-        this.mute.src = SpeakerOff;
-        this.game.audio.disable();
+Buttons.prototype.doFx = function() {
+    if (this.game.audio.fx) {
+        this.fx.src = SpeakerOff;
+        this.game.audio.disableFx();
     } else {
-        this.mute.src = Speaker;
-        this.game.audio.enable();
+        this.fx.src = Speaker;
+        this.game.audio.enableFx();
+    }
+}
+
+Buttons.prototype.doMusic = function() {
+    if (this.game.audio.music) {
+        this.music.src = QuaversOff;
+        this.game.audio.disableMusic();
+    } else {
+        this.music.src = Quavers;
+        this.game.audio.enableMusic();
     }
 }
 

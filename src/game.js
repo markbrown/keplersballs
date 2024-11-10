@@ -32,9 +32,9 @@ export default function Game() {
     this.running = false;
     this.replay = false;
     this.result = null;
-    this.audio = null;
+    this.audio = new Audio();
     this.clock = new Clock();
-    this.world = new World(this.controls);
+    this.world = new World(this.controls, this.audio);
     this.help = new Help();
 
     // press any key to start
@@ -68,8 +68,8 @@ Game.PLAY_FONT = "28px sans-serif";
 
 Game.prototype.hitkey = function() {
     if (this.title || this.replay) {
-        if (!this.audio) {
-            this.audio = new Audio();
+        if (!this.audio.ctx) {
+            this.audio.setup();
         }
         this.help.hide();
         this.world = new World(this.controls, this.audio);
@@ -79,6 +79,7 @@ Game.prototype.hitkey = function() {
         this.result = null;
         this.controls.enable();
         this.clock.start();
+        this.audio.startPlaying();
     }
 }
 
@@ -102,6 +103,7 @@ Game.prototype.run = function() {
 Game.prototype.finish = function(result = null) {
     this.running = false;
     this.result = result;
+    this.audio.stopPlaying();
     setTimeout(() => { this.replay = true; }, Game.REPLAY_DELAY_MS);
 }
 

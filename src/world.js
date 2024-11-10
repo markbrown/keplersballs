@@ -6,7 +6,7 @@ import Vec from "./vec.js";
 const TAU = 2 * Math.PI;
 
 export default
-function World(controls, audio = null, color = "yellow", radius = 10) {
+function World(controls, audio, color = "yellow", radius = 10) {
     // sound effects
     this.audio = audio;
 
