@@ -15,7 +15,8 @@ Help.lines = [
     {name: "Turn left:", controls: "← or A"},
     {name: "Turn right:", controls: "→ or D"},
     {name: "Retro thrusters:", controls: "↓ or S"},
-    {name: "Shoot:", controls: "space"},
+    {name: "Trigger:", controls: "space"},
+    {name: "Trigger lock:", controls: "enter"},
 ];
 
 Help.FONT = "24px sans-serif";

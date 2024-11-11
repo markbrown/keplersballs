@@ -102,6 +102,7 @@ Game.prototype.run = function() {
 
 Game.prototype.finish = function(result = null) {
     this.running = false;
+    this.controls.enabled = false;
     this.result = result;
     this.audio.stopPlaying();
     setTimeout(() => { this.replay = true; }, Game.REPLAY_DELAY_MS);

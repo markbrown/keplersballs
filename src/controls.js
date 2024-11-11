@@ -1,5 +1,6 @@
 export default function Controls() {
     this.enabled = false;
+    this.lock = false;
     this.reset();
     addEventListener("blur", (ev) => this.reset());
     addEventListener("keydown", (ev) => this.keyevent(ev.code, true));
@@ -32,6 +33,9 @@ Controls.prototype.enable = function() {
 }
 
 Controls.prototype.keyevent = function(code, val) {
+    if (code === "Enter" && val) {
+        this.lock = !this.lock;
+    }
     if (!this.enabled) {
         return;
     }
@@ -98,7 +102,7 @@ Controls.prototype.right = function() {
 }
 
 Controls.prototype.trigger = function() {
-    return this.space || this.numpad5;
+    return (this.enabled && this.lock) || this.space || this.numpad5;
 }
 
 // vi: set ai sw=4 ts=8 sts=4 et ai :
