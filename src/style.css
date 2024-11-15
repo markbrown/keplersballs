@@ -9,12 +9,29 @@ body {
     flex-direction: column;
     overflow-x: hidden;
     background: #222;
+    align-items: center;
 }
 
 #canvas {
     height: 100vh;
     min-height: 720px;
-    align-self: center;
+}
+
+#overlay {
+    position: absolute;
+    width: 100vw;
+    max-width: max(177.78vh, 1280px);
+}
+
+#results {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    column-gap: 16px;
+    top: 16px;
+    left: 16px;
+    color: #ddd;
+    font: 32px sans-serif;
 }
 
 #buttons {

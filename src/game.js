@@ -90,7 +90,8 @@ Game.prototype.run = function() {
     if (this.running) {
         if (this.world.finished()) {
             this.audio.win();
-            this.finish(this.clock.text(true));
+            this.result = this.clock.finish();
+            this.finish();
         } else if (!this.controls.enabled) {
             this.finish();
         }
@@ -100,10 +101,9 @@ Game.prototype.run = function() {
     requestAnimationFrame(() => this.run());
 }
 
-Game.prototype.finish = function(result = null) {
+Game.prototype.finish = function() {
     this.running = false;
     this.controls.enabled = false;
-    this.result = result;
     this.audio.stopPlaying();
     setTimeout(() => { this.replay = true; }, Game.REPLAY_DELAY_MS);
 }
@@ -118,7 +118,7 @@ Game.prototype.draw = function() {
         this.help.draw(this.ctx);
     } else if (this.running) {
         // time
-        let text = this.clock.text();
+        let text = this.clock.current;
         this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.CLOCK_COLOR);
 
         // progress bar

@@ -1,6 +1,12 @@
 import Vec from "./vec.js";
 
 export default function Clock() {
+    this.bestElement = document.getElementById("best");
+    this.best = localStorage.getItem("best");
+    if (this.best) {
+        this.bestElement.innerHTML = Clock.format(this.best, true);
+    }
+
     this.start();
 }
 
@@ -8,15 +14,29 @@ export default function Clock() {
 Clock.TICK_MS = 100;
 Clock.MAX_GAME_TIME_PER_FRAME_MS = 25;
 
+Clock.format = function(ticks, tenths = false) {
+    let mins = Math.floor(ticks / 600);
+    let secs = Math.floor(ticks / 10) % 60;
+    if (tenths) {
+        let dec = ticks % 10;
+        return `${mins}m${secs}.${dec}s`;
+    } else if (mins > 0) {
+        return `${mins}m${secs}s`;
+    } else {
+        return `${secs}s`;
+    }
+}
+
 // start the clock from zero
 Clock.prototype.start = function() {
     this.last = Date.now();
     this.time = 0;
     this.ticks = 0;
+    this.current = "";
 }
 
 // update game time and call update/tick as required
-Clock.prototype.frame = function(w) {
+Clock.prototype.frame = function(world) {
     let now = Date.now();
 
     // limit game speed so we get at least a set number of frames per tick
@@ -28,32 +48,32 @@ Clock.prototype.frame = function(w) {
     // perform update, stopping to tick if need be
     let next = this.time + dt;
     if (next > this.ticks * Clock.TICK_MS) {
-        this.update(w, this.ticks * Clock.TICK_MS);
+        this.update(world, this.ticks * Clock.TICK_MS);
         this.ticks++;
-        w.tick(this.ticks);
+        if (this.ticks % 10 == 0) {
+            this.current = Clock.format(this.ticks);
+        }
+        world.tick(this.ticks);
     }
-    this.update(w, next);
+    this.update(world, next);
 }
 
-Clock.prototype.update = function(w, next) {
+Clock.prototype.update = function(world, next) {
     let dt = next - this.time;
     if (dt > 0) {
-        w.update(dt);
+        world.update(dt);
     }
     this.time = next;
 }
 
-Clock.prototype.text = function(tenths = false) {
-    let mins = Math.floor(this.ticks / 600);
-    let secs = Math.floor(this.ticks / 10) % 60;
-    if (tenths) {
-        let dec = this.ticks % 10;
-        return `${mins}m${("0" + secs).slice(-2)}.${dec}s`;
-    } else if (mins > 0) {
-        return `${mins}m${secs}s`;
-    } else {
-        return `${secs}s`;
+Clock.prototype.finish = function() {
+    let text = Clock.format(this.ticks, true);
+    if (!this.best || this.ticks < this.best) {
+        this.best = this.ticks;
+        this.bestElement.innerHTML = text;
+        localStorage.setItem("best", this.best);
     }
+    return text;
 }
 
 // vi: set ai sw=4 ts=8 sts=4 et ai :
