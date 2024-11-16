@@ -139,7 +139,7 @@ Orbit.prototype.draw = function(ctx) {
     let t = 0;
     let period = TAU / this.omega;
     let alpha = Orbit.ALPHA;
-    while (alpha > 0 && ++t < period) {
+    while (alpha >= 1 && ++t < period) {
         this.get(path, t);
         let color = `rgb(192 192 192 / ${Math.floor(alpha)}%)`;
         path.pos.spot(ctx, Orbit.MARKER_SIZE, color);
