@@ -3,6 +3,7 @@ import Buttons from "./buttons.js";
 import Clock from "./clock.js";
 import Controls from "./controls.js";
 import Help from "./help.js";
+import Leaders from "./leaders.js";
 import Vec from "./vec.js";
 import World from "./world.js";
 
@@ -35,6 +36,7 @@ export default function Game() {
     this.audio = new Audio();
     this.clock = new Clock();
     this.world = new World(this.controls, this.audio);
+    this.leaders = new Leaders();
     this.help = new Help();
 
     // press any key to start
@@ -90,7 +92,7 @@ Game.prototype.run = function() {
     if (this.running) {
         if (this.world.finished()) {
             this.audio.win();
-            this.result = this.clock.finish();
+            this.result = this.clock.finish(this.leaders);
             this.finish();
         } else if (!this.controls.enabled) {
             this.finish();
@@ -137,6 +139,7 @@ Game.prototype.draw = function() {
         } else {
             this.head.write(this.ctx, Game.RESULT_FONT, Game.LOSE_TEXT);
         }
+        this.leaders.draw(this.ctx);
         if (this.replay) {
             this.foot.write(this.ctx, Game.PLAY_FONT, Game.REPLAY_TEXT);
         }

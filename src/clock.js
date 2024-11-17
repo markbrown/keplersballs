@@ -1,12 +1,6 @@
 import Vec from "./vec.js";
 
 export default function Clock() {
-    this.bestElement = document.getElementById("best");
-    this.best = localStorage.getItem("best");
-    if (this.best) {
-        this.bestElement.innerHTML = Clock.format(this.best, true);
-    }
-
     this.start();
 }
 
@@ -66,14 +60,9 @@ Clock.prototype.update = function(world, next) {
     this.time = next;
 }
 
-Clock.prototype.finish = function() {
-    let text = Clock.format(this.ticks, true);
-    if (!this.best || this.ticks < this.best) {
-        this.best = this.ticks;
-        this.bestElement.innerHTML = text;
-        localStorage.setItem("best", this.best);
-    }
-    return text;
+Clock.prototype.finish = function(leaders) {
+    leaders.insert(this.ticks);
+    return leaders.ordinal() || Clock.format(this.ticks, true);
 }
 
 // vi: set ai sw=4 ts=8 sts=4 et ai :

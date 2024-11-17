@@ -23,17 +23,6 @@ body {
     max-width: max(177.78vh, 1280px);
 }
 
-#results {
-    position: absolute;
-    display: flex;
-    flex-direction: row;
-    column-gap: 16px;
-    top: 16px;
-    left: 16px;
-    color: #ddd;
-    font: 32px sans-serif;
-}
-
 #buttons {
     position: absolute;
     display: flex;
