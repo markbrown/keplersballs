@@ -4,7 +4,7 @@ import Clock from "./clock.js";
 export default function Leaders(name = "best") {
     this.name = name;
     this.times = this.read();
-    this.place = -1;
+    this.setup();
 }
 
 Leaders.FONT = "24px sans-serif";
@@ -17,6 +17,10 @@ Leaders.COL2 = 80;
 Leaders.NUM_WIDTH = 50;
 Leaders.COLOR = "#ddd";
 Leaders.HIGHLIGHT = "DarkOrange";
+
+Leaders.prototype.setup = function() {
+    this.place = -1;
+}
 
 Leaders.prototype.read = function() {
     let best = localStorage.getItem(this.name);

@@ -79,6 +79,7 @@ Game.prototype.hitkey = function() {
         this.running = true;
         this.replay = false;
         this.result = null;
+        this.leaders.setup();
         this.controls.enable();
         this.clock.start();
         this.audio.startPlaying();
