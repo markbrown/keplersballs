@@ -12,7 +12,7 @@ Leaders.ROWS = 6;
 Leaders.COLS = 2;
 Leaders.LINE_TOP = 100;
 Leaders.LINE_HEIGHT = 36;
-Leaders.COL1 = -200;
+Leaders.COL1 = -220;
 Leaders.COL2 = 80;
 Leaders.NUM_WIDTH = 50;
 Leaders.COLOR = "#ddd";
@@ -46,10 +46,10 @@ Leaders.prototype.insert = function(time) {
 
 Leaders.prototype.ordinal = function() {
     switch (this.place) {
-        case 0: return "1st place!!";
-        case 1: return "2nd place!";
-        case 2: return "3rd place!";
-        default: return this.place > 2 ? `${this.place + 1}th place` : "";
+        case 0: return "New record!!";
+        case 1: return "2nd fastest!";
+        case 2: return "3rd fastest!";
+        default: return this.place > 2 ? `${this.place + 1}th fastest` : "";
     }
 }
 

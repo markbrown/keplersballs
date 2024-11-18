@@ -34,6 +34,8 @@ Ship.OUTER_FLAME_COLOR = "yellow";
 Ship.INNER_FLAME_COLOR = "orange";
 Ship.FLAME_SIZE = 10;
 Ship.RETRO_DISPLACEMENT = 3;
+Ship.FORE_POS = 4;
+Ship.AFT_POS = 5;
 
 Ship.prototype.alive = function() {
     return this.controls.enabled;
@@ -50,11 +52,11 @@ Ship.prototype.ahead = function(s = 1) {
 Ship.prototype.tick = function(ticks, bullets, effects) {
     if (this.alive()) {
         if (this.controls.forward()) {
-            let aft = this.pos().plus(this.ahead(-1.5 * Ship.FLAME_SIZE));
+            let aft = this.pos().plus(this.ahead(-Ship.AFT_POS));
             effects.push(new Smoke(aft, Ship.THRUST_SMOKE));
         } else if (this.controls.backward() && ticks % 2) {
             let ahead = this.ahead();
-            let fore = this.pos().plus(ahead.scale(0.75 * Ship.FLAME_SIZE));
+            let fore = this.pos().plus(ahead.scale(Ship.FORE_POS));
             let side = ahead.crossZ(Ship.RETRO_DISPLACEMENT);
             effects.push(new Smoke(fore.plus(side), Ship.RETRO_SMOKE));
             effects.push(new Smoke(fore.minus(side), Ship.RETRO_SMOKE));
