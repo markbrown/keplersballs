@@ -10,6 +10,9 @@ export default function Buttons(game) {
     this.game = game;
     this.container = document.getElementById("container");
     this.buttons = document.getElementById("buttons");
+    this.fullscreen = null;
+    this.idleTimer = null;
+    this.ignoreMove = false;
 
     // add a fullscreen button if we can
     if (document.fullscreenEnabled) {
@@ -19,6 +22,8 @@ export default function Buttons(game) {
         this.buttons.appendChild(this.fullscreen);
         document.addEventListener("fullscreenchange",
             (e) => this.fullscreenChange());
+        document.addEventListener("mousemove", () => this.mousemove());
+        document.addEventListener("mouseover", () => this.mouseover());
     }
 
     this.fx = new Image();
@@ -26,10 +31,32 @@ export default function Buttons(game) {
     this.fx.addEventListener("click", (e) => this.doFx());
     this.buttons.appendChild(this.fx);
 
-    this.music= new Image();
+    this.music = new Image();
     this.music.src = Quavers;
     this.music.addEventListener("click", (e) => this.doMusic());
     this.buttons.appendChild(this.music);
+}
+
+Buttons.MOUSE_TIMEOUT = 1000;
+
+Buttons.prototype.mouseover = function() {
+    if (!document.fullscreenElement) {
+        this.container.style.cursor = "";
+    }
+}
+
+Buttons.prototype.mousemove = function() {
+    if (this.ignoreMove) {
+        return;
+    } else if (document.fullscreenElement) {
+        this.container.style.cursor = "";
+        clearTimeout(this.idleTimer);
+        this.idleTimer = setTimeout(() => {
+            this.container.style.cursor = "none";
+            this.ignoreMove = true;
+            setTimeout(() => { this.ignoreMove = false; }, 200);
+        }, Buttons.MOUSE_TIMEOUT);
+    }
 }
 
 Buttons.prototype.doFullscreen = function() {
@@ -42,9 +69,13 @@ Buttons.prototype.doFullscreen = function() {
 
 Buttons.prototype.fullscreenChange = function() {
     if (document.fullscreenElement) {
+        // just expanded
         this.fullscreen.src = Retract;
+        this.container.style.cursor = "none";
     } else {
+        // just retracted
         this.fullscreen.src = Expand;
+        this.container.style.cursor = "";
     }
 }
 
