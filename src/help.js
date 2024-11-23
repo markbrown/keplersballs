@@ -32,6 +32,11 @@ Help.prototype.hide = function() {
     this.helpscroll.style.visibility = "hidden";
 }
 
+// show the helpscroll
+Help.prototype.show = function() {
+    this.helpscroll.style.visibility = "visible";
+}
+
 Help.prototype.scroll = function(time) {
     let start = this.viewheight - Help.SCROLL_START;
     let max = this.helpheight + this.viewheight;

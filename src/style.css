@@ -31,7 +31,16 @@ body {
     justify-content: right;
     height: 32px;
     top: 16px;
+    left: 16px;
     right: 16px;
+}
+
+#reload {
+    margin-right: auto;
+}
+
+#reset {
+    visibility: hidden;
 }
 
 .help {

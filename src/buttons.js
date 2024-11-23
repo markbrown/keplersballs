@@ -10,6 +10,9 @@ export default function Buttons(game) {
     this.idleTimer = null;
     this.ignoreMove = false;
 
+    this.reload = document.getElementById("reload");
+    this.reload.addEventListener("click", () => this.doReload());
+
     this.reset = document.getElementById("reset");
     this.reset.addEventListener("click", () => this.doReset());
 
@@ -56,8 +59,12 @@ Buttons.prototype.mousemove = function() {
     }
 }
 
+Buttons.prototype.doReload = function() {
+    this.game.reload();
+}
+
 Buttons.prototype.doReset = function() {
-    if (!this.game.running && confirm("Reset leaderboard?")) {
+    if (confirm("Reset leaderboard?")) {
         this.game.leaders.reset();
     }
 }

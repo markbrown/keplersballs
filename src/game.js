@@ -74,6 +74,7 @@ Game.prototype.hitkey = function() {
             this.audio.setup();
         }
         this.help.hide();
+        this.buttons.reset.style.visibility = "hidden";
         this.world = new World(this.controls, this.audio);
         this.title = false;
         this.running = true;
@@ -84,6 +85,16 @@ Game.prototype.hitkey = function() {
         this.clock.start();
         this.audio.startPlaying();
     }
+}
+
+Game.prototype.reload = function() {
+    this.title = true;
+    this.running = false;
+    this.controls.enabled = false;
+    this.audio.stopMusic();
+    this.buttons.reset.style.visibility = "hidden";
+    this.clock.start();
+    this.help.show();
 }
 
 Game.prototype.run = function() {
@@ -108,6 +119,7 @@ Game.prototype.finish = function() {
     this.running = false;
     this.controls.enabled = false;
     this.audio.stopPlaying();
+    this.buttons.reset.style.visibility = "visible";
     setTimeout(() => { this.replay = true; }, Game.REPLAY_DELAY_MS);
 }
 

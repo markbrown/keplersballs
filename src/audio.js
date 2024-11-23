@@ -104,9 +104,7 @@ Audio.prototype.startMusic = function() {
         return;
     }
 
-    if (this.musicSource) {
-        this.musicSource.stop();
-    }
+    this.stopMusic();
 
     let buffer = this.playing ? this.playingBuffer : this.stoppedBuffer;
     this.musicSource = this.ctx.createBufferSource();
@@ -114,6 +112,12 @@ Audio.prototype.startMusic = function() {
     this.musicSource.buffer = buffer;
     this.musicSource.connect(this.musicGain);
     this.musicSource.start();
+}
+
+Audio.prototype.stopMusic = function() {
+    if (this.musicSource) {
+        this.musicSource.stop();
+    }
 }
 
 Audio.prototype.hit = function() {
