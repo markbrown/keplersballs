@@ -18,12 +18,15 @@ export default function Ship(controls, mu, path, heading = TAU / 4) {
 
     // ship state
     this.color = Ship.LIVE_COLOR;
+    this.heat = 0;
     this.orbit = new Orbit(this.mu, path);
 }
 
 Ship.LIVE_COLOR = "lime";
 Ship.DEAD_COLOR = "SlateGrey";
 Ship.SIZE = 5;
+Ship.HEAT_ABSORPTION = 100;
+Ship.HEAT_DISSIPATION = 0.02;
 Ship.THRUST_ACCEL = 16;
 Ship.RETRO_ACCEL = 12;
 Ship.SPEED_CAP = 0.99;
@@ -93,6 +96,10 @@ Ship.prototype.advance = function(dt) {
     } else {
         this.heading += this.deadturn * ds;
     }
+
+    let sunlight = Ship.HEAT_ABSORPTION / this.pos().sqr();
+    let dh = (sunlight - Ship.HEAT_DISSIPATION) * ds;
+    this.heat = Math.max(0, this.heat + dh);
 
     // normalize angle
     this.heading %= TAU;

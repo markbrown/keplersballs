@@ -114,10 +114,17 @@ World.prototype.checkShip = function() {
         }
     });
 
-    // check for ship hitting the sun
+    // check for ship overheating or hitting the sun
+    if (this.ship.heat > 1) {
+        this.ship.die();
+    }
     if (this.ship.fried(this.radius, this.audio)) {
         this.ship = null;
     }
+}
+
+World.prototype.shipHeat = function() {
+    return this.ship ? Math.min(1, this.ship.heat) : 0;
 }
 
 World.prototype.draw = function(ctx) {

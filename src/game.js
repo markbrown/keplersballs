@@ -47,15 +47,17 @@ Game.WIDTH = 1280;
 Game.HEIGHT = 720;
 Game.TITLE_OFFSET = 260;
 Game.CLOCK_OFFSET = 180;
-Game.PROGRESS_OFFSET = 328;
-Game.PROGRESS_HEIGHT = 10;
-Game.PROGRESS_WIDTH = 480;
+Game.PROGRESS_OFFSET = 332;
+Game.HEAT_OFFSET = 316;
+Game.BAR_HEIGHT = 8;
+Game.BAR_WIDTH = 480;
 
 Game.REPLAY_DELAY_MS = 2000;
 
 Game.CLOCK_COLOR = "DarkOrange";
 Game.WIN_COLOR = "#ccc";
 Game.PROGRESS_COLOR = "RoyalBlue";
+Game.HEAT_COLOR = "Crimson";
 
 Game.TITLE_TEXT = "KEPLER'S BALLS";
 Game.WIN_TEXT = "YOU WIN!";
@@ -136,14 +138,11 @@ Game.prototype.draw = function() {
         let text = this.clock.current;
         this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.CLOCK_COLOR);
 
-        // progress bar
-        let frac = this.world.progress / this.world.total;
-        this.ctx.strokeStyle = Game.PROGRESS_COLOR;
-        this.ctx.fillStyle = Game.PROGRESS_COLOR;
-        this.ctx.strokeRect(-Game.PROGRESS_WIDTH / 2, Game.PROGRESS_OFFSET,
-            Game.PROGRESS_WIDTH, Game.PROGRESS_HEIGHT);
-        this.ctx.fillRect(-Game.PROGRESS_WIDTH / 2, Game.PROGRESS_OFFSET,
-            frac * Game.PROGRESS_WIDTH, Game.PROGRESS_HEIGHT);
+        // status bars
+        let progress = this.world.progress / this.world.total;
+        this.drawBar(progress, Game.PROGRESS_OFFSET, Game.PROGRESS_COLOR);
+        let heat = this.world.shipHeat();
+        this.drawBar(heat, Game.HEAT_OFFSET, Game.HEAT_COLOR);
     } else {
         if (this.result) {
             this.head.write(this.ctx, Game.RESULT_FONT, Game.WIN_TEXT);
@@ -157,6 +156,15 @@ Game.prototype.draw = function() {
             this.foot.write(this.ctx, Game.PLAY_FONT, Game.REPLAY_TEXT);
         }
     }
+}
+
+Game.prototype.drawBar = function(frac, offset, color) {
+    this.ctx.strokeStyle = color;
+    this.ctx.fillStyle = color;
+    this.ctx.strokeRect(-Game.BAR_WIDTH / 2, offset,
+        Game.BAR_WIDTH, Game.BAR_HEIGHT);
+    this.ctx.fillRect(-Game.BAR_WIDTH / 2, offset,
+        frac * Game.BAR_WIDTH, Game.BAR_HEIGHT);
 }
 
 Game.prototype.clear = function() {
