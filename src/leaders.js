@@ -22,6 +22,11 @@ Leaders.prototype.setup = function() {
     this.place = -1;
 }
 
+Leaders.prototype.reset = function() {
+    localStorage.clear();
+    this.times = [];
+}
+
 Leaders.prototype.read = function() {
     let best = localStorage.getItem(this.name);
     return best ? best.split(" ").map(str => Number(str)) : [];
@@ -47,9 +52,9 @@ Leaders.prototype.insert = function(time) {
 Leaders.prototype.ordinal = function() {
     switch (this.place) {
         case 0: return "New record!!";
-        case 1: return "2nd fastest!";
-        case 2: return "3rd fastest!";
-        default: return this.place > 2 ? `${this.place + 1}th fastest` : "";
+        case 1: return "2nd fastest time!";
+        case 2: return "3rd fastest time!";
+        default: return this.place > 2 ? `${this.place+1}th fastest time` : "";
     }
 }
 
@@ -66,7 +71,7 @@ Leaders.prototype.draw = function(ctx) {
 
 Leaders.prototype.drawLeader = function(ctx, i, x, y) {
     let color = (i == this.place) ? Leaders.HIGHLIGHT : Leaders.COLOR;
-    let text = "--:--.-";
+    let text = "--m--.-s";
     if (i < this.times.length) {
         text = Clock.format(this.times[i], true);
     }

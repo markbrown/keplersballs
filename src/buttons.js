@@ -1,10 +1,6 @@
 import Audio from "./audio.js";
 import Expand from "./expand.svg";
-import Quavers from "./quavers.svg";
-import QuaversOff from "./quaversoff.svg";
 import Retract from "./retract.svg";
-import Speaker from "./speaker.svg";
-import SpeakerOff from "./speakeroff.svg";
 
 export default function Buttons(game) {
     this.game = game;
@@ -13,6 +9,15 @@ export default function Buttons(game) {
     this.fullscreen = null;
     this.idleTimer = null;
     this.ignoreMove = false;
+
+    this.reset = document.getElementById("reset");
+    this.reset.addEventListener("click", () => this.doReset());
+
+    this.quavers = document.getElementById("quavers");
+    this.quavers.addEventListener("click", () => this.doQuavers());
+
+    this.speaker = document.getElementById("speaker");
+    this.speaker.addEventListener("click", () => this.doSpeaker());
 
     // add a fullscreen button if we can
     if (document.fullscreenEnabled) {
@@ -25,19 +30,11 @@ export default function Buttons(game) {
         document.addEventListener("mousemove", () => this.mousemove());
         document.addEventListener("mouseover", () => this.mouseover());
     }
-
-    this.fx = new Image();
-    this.fx.src = Speaker;
-    this.fx.addEventListener("click", (e) => this.doFx());
-    this.buttons.appendChild(this.fx);
-
-    this.music = new Image();
-    this.music.src = Quavers;
-    this.music.addEventListener("click", (e) => this.doMusic());
-    this.buttons.appendChild(this.music);
 }
 
 Buttons.MOUSE_TIMEOUT = 1000;
+Buttons.COLOR_ON = "#fff";
+Buttons.COLOR_OFF = "#444";
 
 Buttons.prototype.mouseover = function() {
     if (!document.fullscreenElement) {
@@ -59,6 +56,32 @@ Buttons.prototype.mousemove = function() {
     }
 }
 
+Buttons.prototype.doReset = function() {
+    if (!this.game.running && confirm("Reset leaderboard?")) {
+        this.game.leaders.reset();
+    }
+}
+
+Buttons.prototype.doQuavers = function() {
+    if (this.game.audio.music) {
+        this.game.audio.disableMusic();
+        this.quavers.style.fill = Buttons.COLOR_OFF;
+    } else {
+        this.game.audio.enableMusic();
+        this.quavers.style.fill = Buttons.COLOR_ON;
+    }
+}
+
+Buttons.prototype.doSpeaker = function() {
+    if (this.game.audio.fx) {
+        this.game.audio.disableFx();
+        this.speaker.style.fill = Buttons.COLOR_OFF;
+    } else {
+        this.game.audio.enableFx();
+        this.speaker.style.fill = Buttons.COLOR_ON;
+    }
+}
+
 Buttons.prototype.doFullscreen = function() {
     if (document.fullscreenElement) {
         document.exitFullscreen();
@@ -76,26 +99,6 @@ Buttons.prototype.fullscreenChange = function() {
         // just retracted
         this.fullscreen.src = Expand;
         this.container.style.cursor = "";
-    }
-}
-
-Buttons.prototype.doFx = function() {
-    if (this.game.audio.fx) {
-        this.fx.src = SpeakerOff;
-        this.game.audio.disableFx();
-    } else {
-        this.fx.src = Speaker;
-        this.game.audio.enableFx();
-    }
-}
-
-Buttons.prototype.doMusic = function() {
-    if (this.game.audio.music) {
-        this.music.src = QuaversOff;
-        this.game.audio.disableMusic();
-    } else {
-        this.music.src = Quavers;
-        this.game.audio.enableMusic();
     }
 }
 

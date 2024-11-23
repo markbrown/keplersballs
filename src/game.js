@@ -46,7 +46,7 @@ export default function Game() {
 Game.WIDTH = 1280;
 Game.HEIGHT = 720;
 Game.TITLE_OFFSET = 260;
-Game.CLOCK_OFFSET = 200;
+Game.CLOCK_OFFSET = 180;
 Game.PROGRESS_OFFSET = 328;
 Game.PROGRESS_HEIGHT = 10;
 Game.PROGRESS_WIDTH = 480;
