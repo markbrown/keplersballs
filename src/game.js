@@ -52,8 +52,8 @@ export default function Game() {
 
 Game.WIDTH = 1280;
 Game.HEIGHT = 720;
-Game.TITLE_OFFSET = 250;
-Game.CLOCK_OFFSET = 160;
+Game.TITLE_OFFSET = 240;
+Game.CLOCK_OFFSET = 150;
 
 Game.REPLAY_DELAY_MS = 2000;
 
