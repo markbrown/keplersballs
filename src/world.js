@@ -115,7 +115,7 @@ World.prototype.checkShip = function() {
     });
 
     // check for ship overheating or hitting the sun
-    if (this.ship.heat > 1) {
+    if (this.ship.alive() && this.ship.heat >= 1) {
         this.ship.die("ship overheated");
     }
     if (this.ship.fried(this.radius, this.audio)) {

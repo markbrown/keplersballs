@@ -52,8 +52,8 @@ export default function Game() {
 
 Game.WIDTH = 1280;
 Game.HEIGHT = 720;
-Game.TITLE_OFFSET = 260;
-Game.CLOCK_OFFSET = 180;
+Game.TITLE_OFFSET = 250;
+Game.CLOCK_OFFSET = 160;
 
 Game.REPLAY_DELAY_MS = 2000;
 
@@ -148,10 +148,7 @@ Game.prototype.draw = function() {
         // time
         let text = this.clock.current;
         this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.CLOCK_COLOR);
-
-        // status bars
-        this.progress.draw(this.ctx, this.world.progress());
-        this.heat.draw(this.ctx, this.world.shipHeat());
+        this.drawStatus();
     } else {
         if (this.win) {
             this.head.write(this.ctx, Game.RESULT_FONT, Game.WIN_TEXT);
@@ -162,11 +159,17 @@ Game.prototype.draw = function() {
             let text = this.result;
             this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.WIN_COLOR);
         }
+        this.drawStatus();
         this.leaders.draw(this.ctx);
         if (this.replay) {
             this.foot.write(this.ctx, Game.PLAY_FONT, Game.REPLAY_TEXT);
         }
     }
+}
+
+Game.prototype.drawStatus = function() {
+    this.progress.draw(this.ctx, this.world.progress());
+    this.heat.draw(this.ctx, this.world.shipHeat());
 }
 
 Game.prototype.clear = function() {

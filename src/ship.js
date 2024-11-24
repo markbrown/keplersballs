@@ -101,7 +101,8 @@ Ship.prototype.advance = function(dt) {
 
     let sunlight = Ship.ABSORPTION / this.pos().sqr();
     let cooling = Ship.DISSIPATION_MIN + this.heat * Ship.DISSIPATION_VAR;
-    this.heat = Math.max(0, this.heat + ds * (sunlight - cooling));
+    let heat = this.heat + ds * (sunlight - cooling);
+    this.heat = Math.max(0, Math.min(2, heat));
 
     // normalize angle
     this.heading %= TAU;
