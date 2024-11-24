@@ -34,7 +34,7 @@ function World(controls, audio, color = "yellow", radius = 10) {
     }
 
     // progress
-    this.progress = 0;
+    this.popped = 0;
     this.total = World.ROID_COUNT * (2 ** Roid.info.length - 1)
 }
 
@@ -99,7 +99,7 @@ World.prototype.collisions = function() {
                 hits += bullet.hit(this.audio);
             }
         });
-        this.progress += roid.smash(hits, roids, this.effects, this.audio);
+        this.popped += roid.smash(hits, roids, this.effects, this.audio);
     });
     this.roids = roids;
 
@@ -125,6 +125,10 @@ World.prototype.checkShip = function() {
 
 World.prototype.shipHeat = function() {
     return this.ship ? Math.min(1, this.ship.heat) : 0;
+}
+
+World.prototype.progress = function() {
+    return this.popped / this.total;
 }
 
 World.prototype.draw = function(ctx) {

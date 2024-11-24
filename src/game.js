@@ -1,4 +1,5 @@
 import Audio from "./audio.js";
+import Bar from "./bar.js";
 import Buttons from "./buttons.js";
 import Clock from "./clock.js";
 import Controls from "./controls.js";
@@ -39,6 +40,10 @@ export default function Game() {
     this.leaders = new Leaders();
     this.help = new Help();
 
+    // status bars
+    this.progress = new Bar(0, "progress", Game.PROGRESS_COLOR);
+    this.heat = new Bar(1, "temperature", Game.HEAT_COLOR);
+
     // press any key to start
     addEventListener("keydown", (ev) => this.hitkey());
 }
@@ -47,10 +52,6 @@ Game.WIDTH = 1280;
 Game.HEIGHT = 720;
 Game.TITLE_OFFSET = 260;
 Game.CLOCK_OFFSET = 180;
-Game.PROGRESS_OFFSET = 332;
-Game.HEAT_OFFSET = 316;
-Game.BAR_HEIGHT = 8;
-Game.BAR_WIDTH = 480;
 
 Game.REPLAY_DELAY_MS = 2000;
 
@@ -139,10 +140,8 @@ Game.prototype.draw = function() {
         this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.CLOCK_COLOR);
 
         // status bars
-        let progress = this.world.progress / this.world.total;
-        this.drawBar(progress, Game.PROGRESS_OFFSET, Game.PROGRESS_COLOR);
-        let heat = this.world.shipHeat();
-        this.drawBar(heat, Game.HEAT_OFFSET, Game.HEAT_COLOR);
+        this.progress.draw(this.ctx, this.world.progress());
+        this.heat.draw(this.ctx, this.world.shipHeat());
     } else {
         if (this.result) {
             this.head.write(this.ctx, Game.RESULT_FONT, Game.WIN_TEXT);
@@ -156,15 +155,6 @@ Game.prototype.draw = function() {
             this.foot.write(this.ctx, Game.PLAY_FONT, Game.REPLAY_TEXT);
         }
     }
-}
-
-Game.prototype.drawBar = function(frac, offset, color) {
-    this.ctx.strokeStyle = color;
-    this.ctx.fillStyle = color;
-    this.ctx.strokeRect(-Game.BAR_WIDTH / 2, offset,
-        Game.BAR_WIDTH, Game.BAR_HEIGHT);
-    this.ctx.fillRect(-Game.BAR_WIDTH / 2, offset,
-        frac * Game.BAR_WIDTH, Game.BAR_HEIGHT);
 }
 
 Game.prototype.clear = function() {
