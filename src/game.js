@@ -33,6 +33,7 @@ export default function Game() {
     this.title = true;
     this.running = false;
     this.replay = false;
+    this.win = false;
     this.result = null;
     this.audio = new Audio();
     this.clock = new Clock();
@@ -113,9 +114,12 @@ Game.prototype.run = function() {
     if (this.running) {
         if (this.world.finished()) {
             this.audio.win();
+            this.win = true;
             this.result = this.clock.finish(this.leaders);
             this.finish();
         } else if (!this.controls.enabled) {
+            this.win = false;
+            this.result = this.world.shipDeath();
             this.finish();
         }
     }
@@ -149,12 +153,14 @@ Game.prototype.draw = function() {
         this.progress.draw(this.ctx, this.world.progress());
         this.heat.draw(this.ctx, this.world.shipHeat());
     } else {
-        if (this.result) {
+        if (this.win) {
             this.head.write(this.ctx, Game.RESULT_FONT, Game.WIN_TEXT);
-            let text = this.result;
-            this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.WIN_COLOR);
         } else {
             this.head.write(this.ctx, Game.RESULT_FONT, Game.LOSE_TEXT);
+        }
+        if (this.result) {
+            let text = this.result;
+            this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.WIN_COLOR);
         }
         this.leaders.draw(this.ctx);
         if (this.replay) {

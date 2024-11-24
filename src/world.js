@@ -116,7 +116,7 @@ World.prototype.checkShip = function() {
 
     // check for ship overheating or hitting the sun
     if (this.ship.heat > 1) {
-        this.ship.die();
+        this.ship.die("ship overheated");
     }
     if (this.ship.fried(this.radius, this.audio)) {
         this.ship = null;
@@ -125,6 +125,10 @@ World.prototype.checkShip = function() {
 
 World.prototype.shipHeat = function() {
     return this.ship ? Math.min(1, this.ship.heat) : 0;
+}
+
+World.prototype.shipDeath = function() {
+    return this.ship ? this.ship.death : "";
 }
 
 World.prototype.progress = function() {

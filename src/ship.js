@@ -17,6 +17,7 @@ export default function Ship(controls, mu, path, heading = TAU / 4) {
     this.deadturn = 0;
 
     // ship state
+    this.death = "";
     this.color = Ship.LIVE_COLOR;
     this.heat = 0;
     this.orbit = new Orbit(this.mu, path);
@@ -116,7 +117,7 @@ Ship.prototype.fried = function(radius, audio) {
     if (this.orbit.complete() && this.near(radius)) {
         if (this.alive()) {
             // ship hits the sun
-            this.die();
+            this.die("ship overheated");
         } else {
             return true;
         }
@@ -143,7 +144,7 @@ Ship.prototype.thrust = function(dv) {
 Ship.prototype.crash = function(audio) {
     if (this.alive()) {
         audio.crash();
-        this.die();
+        this.die("ship crashed");
 
         // fall into the sun
         let path = this.orbit.path;
@@ -152,7 +153,8 @@ Ship.prototype.crash = function(audio) {
     }
 }
 
-Ship.prototype.die = function() {
+Ship.prototype.die = function(death) {
+    this.death = death;
     this.controls.enabled = false;
     this.color = Ship.DEAD_COLOR;
     this.deadturn = (0.5 - Math.random()) * Turn.RATE;
