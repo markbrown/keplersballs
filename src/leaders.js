@@ -1,9 +1,9 @@
 import Vec from "./vec.js";
 import Clock from "./clock.js";
 
-export default function Leaders(name = "best") {
-    this.name = name;
-    this.times = this.read();
+export default function Leaders(name = "keplersballs") {
+    this.timesName = name + ".times";
+    this.read();
     this.setup();
 }
 
@@ -28,12 +28,12 @@ Leaders.prototype.reset = function() {
 }
 
 Leaders.prototype.read = function() {
-    let best = localStorage.getItem(this.name);
-    return best ? best.split(" ").map(str => Number(str)) : [];
+    let val = localStorage.getItem(this.timesName);
+    this.times = val ? val.split(" ").map(str => Number(str)) : [];
 }
 
 Leaders.prototype.write = function() {
-    localStorage.setItem(this.name, this.times.join(" "));
+    localStorage.setItem(this.timesName, this.times.join(" "));
 }
 
 Leaders.prototype.insert = function(time) {
