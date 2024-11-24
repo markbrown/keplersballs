@@ -100,6 +100,7 @@ Game.prototype.reload = function() {
     this.title = true;
     this.running = false;
     this.controls.enabled = false;
+    this.buttons.reset.style.visibility = "visible";
     this.audio.stopMusic();
     this.clock.start();
     this.help.show();
@@ -126,8 +127,8 @@ Game.prototype.run = function() {
 Game.prototype.finish = function() {
     this.running = false;
     this.controls.enabled = false;
-    this.audio.stopPlaying();
     this.buttons.reset.style.visibility = "visible";
+    this.audio.stopPlaying();
     setTimeout(() => { this.replay = true; }, Game.REPLAY_DELAY_MS);
 }
 
