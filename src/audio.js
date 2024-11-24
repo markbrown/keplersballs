@@ -6,10 +6,6 @@ import Hit from "./hit.mp3";
 import Pop from "./pop.mp3";
 import Win from "./win.mp3";
 
-// music
-import Piece1 from "./piece1.mp3";
-import Piece2 from "./piece2.mp3";
-
 export default function Audio() {
     this.ctx = null;
     this.fxGain = null;
@@ -32,8 +28,10 @@ Audio.prototype.setup = function() {
         this.popBuffer = await this.load(Pop);
         this.crashBuffer = await this.load(Crash);
         this.winBuffer = await this.load(Win);
-        this.playingBuffer = await this.load(Piece1);
-        this.stoppedBuffer = await this.load(Piece2);
+        let { default: piece1 } = await import("../music/piece1.mp3");
+        let { default: piece2 } = await import("../music/piece2.mp3");
+        this.playingBuffer = await this.load(piece1);
+        this.stoppedBuffer = await this.load(piece2);
         this.loaded = true;
         this.startMusic();
     })();
