@@ -25,8 +25,9 @@ export default function Ship(controls, mu, path, heading = TAU / 4) {
 Ship.LIVE_COLOR = "lime";
 Ship.DEAD_COLOR = "SlateGrey";
 Ship.SIZE = 5;
-Ship.HEAT_ABSORPTION = 100;
-Ship.HEAT_DISSIPATION = 0.02;
+Ship.ABSORPTION = 100;
+Ship.DISSIPATION_MIN = 15e-3;
+Ship.DISSIPATION_VAR = 7e-3;
 Ship.THRUST_ACCEL = 16;
 Ship.RETRO_ACCEL = 12;
 Ship.SPEED_CAP = 0.99;
@@ -97,9 +98,9 @@ Ship.prototype.advance = function(dt) {
         this.heading += this.deadturn * ds;
     }
 
-    let sunlight = Ship.HEAT_ABSORPTION / this.pos().sqr();
-    let dh = (sunlight - Ship.HEAT_DISSIPATION) * ds;
-    this.heat = Math.max(0, this.heat + dh);
+    let sunlight = Ship.ABSORPTION / this.pos().sqr();
+    let cooling = Ship.DISSIPATION_MIN + this.heat * Ship.DISSIPATION_VAR;
+    this.heat = Math.max(0, this.heat + ds * (sunlight - cooling));
 
     // normalize angle
     this.heading %= TAU;
