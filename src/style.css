@@ -1,6 +1,7 @@
 body {
     margin: 0;
     direction: ltr;
+    user-select: none;
 }
 
 #container {
@@ -33,7 +34,6 @@ body {
     top: 16px;
     left: 16px;
     right: 16px;
-    user-select: none;
     color: #bbb;
     font-family: sans-serif;
 }
