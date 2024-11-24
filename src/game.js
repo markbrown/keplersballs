@@ -45,7 +45,8 @@ export default function Game() {
     this.heat = new Bar(1, "temperature", Game.HEAT_COLOR);
 
     // press any key to start
-    addEventListener("keydown", (ev) => this.hitkey());
+    addEventListener("keydown", (ev) => this.hitkey(ev));
+    addEventListener("click", (ev) => this.click(ev));
 }
 
 Game.WIDTH = 1280;
@@ -71,7 +72,8 @@ Game.RESULT_FONT = "80px sans-serif";
 Game.CLOCK_FONT = "20px sans-serif";
 Game.PLAY_FONT = "28px sans-serif";
 
-Game.prototype.hitkey = function() {
+Game.prototype.hitkey = function(ev) {
+    this.buttons.hideConfirm();
     if (this.title || this.replay) {
         if (!this.audio.ctx) {
             this.audio.setup();
@@ -90,12 +92,15 @@ Game.prototype.hitkey = function() {
     }
 }
 
+Game.prototype.click = function(ev) {
+    this.buttons.hideConfirm();
+}
+
 Game.prototype.reload = function() {
     this.title = true;
     this.running = false;
     this.controls.enabled = false;
     this.audio.stopMusic();
-    this.buttons.reset.style.visibility = "hidden";
     this.clock.start();
     this.help.show();
 }

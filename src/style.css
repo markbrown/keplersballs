@@ -33,14 +33,19 @@ body {
     top: 16px;
     left: 16px;
     right: 16px;
+    user-select: none;
+    color: #bbb;
+    font-family: sans-serif;
 }
 
-#reload {
+#buttons > * {
+    margin: auto 0;
+}
+
+#confirm {
     margin-right: auto;
-}
-
-#reset {
     visibility: hidden;
+    color: lime;
 }
 
 .help {

@@ -25,6 +25,7 @@ Leaders.prototype.setup = function() {
 Leaders.prototype.reset = function() {
     localStorage.clear();
     this.times = [];
+    this.setup();
 }
 
 Leaders.prototype.read = function() {

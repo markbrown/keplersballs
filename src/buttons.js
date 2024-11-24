@@ -6,15 +6,17 @@ export default function Buttons(game) {
     this.game = game;
     this.container = document.getElementById("container");
     this.buttons = document.getElementById("buttons");
+    this.confirmMessage = document.getElementById("confirm");
     this.fullscreen = null;
     this.idleTimer = null;
     this.ignoreMove = false;
+    this.confirmReset = false;
 
     this.reload = document.getElementById("reload");
     this.reload.addEventListener("click", () => this.doReload());
 
     this.reset = document.getElementById("reset");
-    this.reset.addEventListener("click", () => this.doReset());
+    this.reset.addEventListener("click", (ev) => this.doReset(ev));
 
     this.quavers = document.getElementById("quavers");
     this.quavers.addEventListener("click", () => this.doQuavers());
@@ -38,6 +40,7 @@ export default function Buttons(game) {
 Buttons.MOUSE_TIMEOUT = 1000;
 Buttons.COLOR_ON = "#fff";
 Buttons.COLOR_OFF = "#444";
+Buttons.COLOR_CONFIRM = "lime";
 
 Buttons.prototype.mouseover = function() {
     if (!document.fullscreenElement) {
@@ -63,9 +66,32 @@ Buttons.prototype.doReload = function() {
     this.game.reload();
 }
 
-Buttons.prototype.doReset = function() {
-    if (confirm("Reset leaderboard?")) {
+Buttons.prototype.doReset = function(ev) {
+    ev.stopPropagation();
+    ev.preventDefault();
+    if (this.confirmReset) {
+        this.hideConfirm();
         this.game.leaders.reset();
+    } else {
+        this.showConfirm();
+    }
+}
+
+Buttons.prototype.hideConfirm = function() {
+    if (this.confirmReset) {
+        this.confirmReset = false;
+        this.confirmMessage.style.visibility = "hidden";
+        let style = this.reset.style;
+        style.fill = style.stroke = Buttons.COLOR_ON;
+    }
+}
+
+Buttons.prototype.showConfirm = function() {
+    if (!this.confirmReset) {
+        this.confirmReset = true;
+        this.confirmMessage.style.visibility = "visible";
+        let style = this.reset.style;
+        style.fill = style.stroke = Buttons.COLOR_CONFIRM;
     }
 }
 
