@@ -32,6 +32,7 @@ Ship.DISSIPATION_VAR = 7e-3;
 Ship.THRUST_ACCEL = 16;
 Ship.RETRO_ACCEL = 12;
 Ship.SPEED_CAP = 0.99;
+Ship.LOW_SIGNAL_LEVEL = 1000;
 Ship.CRASH_SLOWDOWN = 10;
 Ship.THRUST_SMOKE = 5;
 Ship.RETRO_SMOKE = 2.5;
@@ -162,12 +163,16 @@ Ship.prototype.die = function(death) {
 }
 
 Ship.prototype.draw = function(ctx) {
+    let pos = this.pos();
+    if (pos.sqr() > Ship.LOW_SIGNAL_LEVEL ** 2) {
+        return;
+    }
+
     if (this.alive()) {
         this.orbit.draw(ctx);
     }
 
     // draw the ship
-    let pos = this.pos();
     ctx.save();
     ctx.translate(pos.x, pos.y);
     ctx.rotate(this.heading);
