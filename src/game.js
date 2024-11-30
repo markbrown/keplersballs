@@ -5,6 +5,7 @@ import Clock from "./clock.js";
 import Controls from "./controls.js";
 import Help from "./help.js";
 import Leaders from "./leaders.js";
+import Params from "./params.js";
 import Vec from "./vec.js";
 import World from "./world.js";
 
@@ -37,7 +38,8 @@ export default function Game() {
     this.result = null;
     this.audio = new Audio();
     this.clock = new Clock();
-    this.world = new World(this.controls, this.audio);
+    this.params = new Params(this.buttons.difficulty.value);
+    this.world = new World(this.params, this.controls, this.audio);
     this.leaders = new Leaders();
     this.help = new Help();
 
@@ -80,8 +82,9 @@ Game.prototype.hitkey = function(ev) {
             this.audio.setup();
         }
         this.help.hide();
-        this.buttons.reset.style.visibility = "hidden";
-        this.world = new World(this.controls, this.audio);
+        this.buttons.startPlaying();
+        this.params.setup(this.buttons.difficulty.value);
+        this.world = new World(this.params, this.controls, this.audio);
         this.title = false;
         this.running = true;
         this.replay = false;
@@ -101,7 +104,7 @@ Game.prototype.reload = function() {
     this.title = true;
     this.running = false;
     this.controls.enabled = false;
-    this.buttons.reset.style.visibility = "visible";
+    this.buttons.stopPlaying();
     this.audio.stopMusic();
     this.clock.start();
     this.help.show();
@@ -131,8 +134,8 @@ Game.prototype.run = function() {
 Game.prototype.finish = function() {
     this.running = false;
     this.controls.enabled = false;
-    this.buttons.reset.style.visibility = "visible";
     this.audio.stopPlaying();
+    this.buttons.stopPlaying();
     setTimeout(() => { this.replay = true; }, Game.REPLAY_DELAY_MS);
 }
 

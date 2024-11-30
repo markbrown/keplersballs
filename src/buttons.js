@@ -18,6 +18,9 @@ export default function Buttons(game) {
     this.reset = document.getElementById("reset");
     this.reset.addEventListener("click", (ev) => this.doReset(ev));
 
+    this.difficulty = document.getElementById("difficulty");
+    this.difficulty.addEventListener("focus", () => this.hideConfirm());
+
     this.quavers = document.getElementById("quavers");
     this.quavers.addEventListener("click", () => this.doQuavers());
 
@@ -60,6 +63,16 @@ Buttons.prototype.mousemove = function() {
             setTimeout(() => { this.ignoreMove = false; }, 200);
         }, Buttons.MOUSE_TIMEOUT);
     }
+}
+
+Buttons.prototype.startPlaying = function() {
+    this.reset.style.visibility = "hidden";
+    this.difficulty.disabled = true;
+}
+
+Buttons.prototype.stopPlaying = function() {
+    this.reset.style.visibility = "visible";
+    this.difficulty.disabled = false;
 }
 
 Buttons.prototype.doReload = function() {

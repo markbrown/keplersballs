@@ -6,7 +6,7 @@ import Vec from "./vec.js";
 const TAU = 2 * Math.PI;
 
 export default
-function World(controls, audio, color = "yellow", radius = 10) {
+function World(params, controls, audio) {
     // sound effects
     this.audio = audio;
 
@@ -14,35 +14,29 @@ function World(controls, audio, color = "yellow", radius = 10) {
     this.effects = [];
 
     // the sun
-    this.color = color;
-    this.radius = radius;
+    this.color = params.sunColor;
+    this.radius = params.sunRadius;
 
     // gravitational parameter
-    this.mu = radius * World.GRAVITY_FACTOR;
+    this.mu = params.mu;
 
     // ship
-    let path = this.circle(radius * World.START_RADIUS_FACTOR);
+    let path = this.circle(params.shipRadius);
     this.ship = new Ship(controls, this.mu, path);
 
     // bullets currently in flight
     this.bullets = [];
 
     // roids
+    this.total = 0;
     this.roids = [];
-    for (let i = 0; i < World.ROID_COUNT; i++) {
-        this.addRoid();
+    for (let i = 0; i < params.roidCount; i++) {
+        this.addRoid(params);
     }
 
     // progress
     this.popped = 0;
-    this.total = World.ROID_COUNT * (2 ** Roid.info.length - 1)
 }
-
-World.GRAVITY_FACTOR = 1e5;
-World.START_RADIUS_FACTOR = 10;
-World.ROID_COUNT = 7;
-World.ROID_MIN = 380;
-World.ROID_VAR = 40;
 
 // return a path for a circular orbit
 World.prototype.circle = function(radius, theta = 0) {
@@ -53,10 +47,11 @@ World.prototype.circle = function(radius, theta = 0) {
 }
 
 // add a random roid
-World.prototype.addRoid = function() {
-    let radius = World.ROID_MIN + Math.random() * World.ROID_VAR;
+World.prototype.addRoid = function(params) {
+    let radius = params.roidMin + Math.random() * params.roidVar;
     let path = this.circle(radius, Math.random() * TAU);
-    this.roids.push(new Roid(this.mu, path));
+    this.roids.push(new Roid(this.mu, path, params.roidSize));
+    this.total += 2 ** (params.roidSize + 1) - 1;
 }
 
 // check if all roids are destroyed

@@ -36,6 +36,7 @@ body {
     right: 16px;
     color: #bbb;
     font-family: sans-serif;
+    font-size: 18px;
 }
 
 #buttons > * {
@@ -46,6 +47,18 @@ body {
     margin-right: auto;
     visibility: hidden;
     color: lime;
+}
+
+select {
+    background: transparent;
+    color: white;
+    font-size: 18px;
+    border-radius: 4px;
+    padding: 3px;
+}
+
+select>option {
+    background: black;
 }
 
 .help {
