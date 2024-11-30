@@ -113,8 +113,8 @@ Orbit.prototype.eccentricToMean = function(rho) {
 
 // convert mean anomaly to eccentric anomaly using Newton's method
 Orbit.prototype.meanToEccentric = function(phi) {
-    const limit = 20;
-    const epsilon = 1e-6;
+    const limit = 8;
+    const epsilon = 1e-4;
     const cutoff = 0.8;
 
     phi %= TAU;
