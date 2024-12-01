@@ -17,7 +17,7 @@ Params.prototype.setup = function(difficulty) {
     } else if (difficulty == "hard") {
         this.setupHard();
     } else {
-        this.setupNormal();
+        this.setupMedium();
     }
 }
 
@@ -28,7 +28,7 @@ Params.prototype.setupEasy = function() {
     this.roidVar = 30;
 }
 
-Params.prototype.setupNormal = function() {
+Params.prototype.setupMedium = function() {
     this.roidCount = 6;
     this.roidSize = 3;
     this.roidMin = 380;

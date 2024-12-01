@@ -49,6 +49,10 @@ body {
     color: lime;
 }
 
+label {
+    padding-right: .5ex;
+}
+
 select {
     background: transparent;
     color: white;

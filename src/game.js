@@ -38,7 +38,7 @@ export default function Game() {
     this.result = null;
     this.audio = new Audio();
     this.clock = new Clock();
-    this.params = new Params(this.buttons.difficulty.value);
+    this.params = new Params(this.difficulty());
     this.world = new World(this.params, this.controls, this.audio);
     this.leaders = new Leaders();
     this.help = new Help();
@@ -75,6 +75,10 @@ Game.RESULT_FONT = "80px sans-serif";
 Game.CLOCK_FONT = "20px sans-serif";
 Game.PLAY_FONT = "28px sans-serif";
 
+Game.prototype.difficulty = function() {
+    return this.buttons.difficulty.value;
+}
+
 Game.prototype.hitkey = function(ev) {
     this.buttons.hideConfirm();
     if (this.title || this.replay) {
@@ -83,7 +87,7 @@ Game.prototype.hitkey = function(ev) {
         }
         this.help.hide();
         this.buttons.startPlaying();
-        this.params.setup(this.buttons.difficulty.value);
+        this.params.setup(this.difficulty());
         this.world = new World(this.params, this.controls, this.audio);
         this.title = false;
         this.running = true;
@@ -118,7 +122,7 @@ Game.prototype.run = function() {
         if (this.world.finished()) {
             this.audio.win();
             this.win = true;
-            this.result = this.clock.finish(this.leaders);
+            this.result = this.clock.finish(this.leaders, this.difficulty());
             this.finish();
         } else if (!this.controls.enabled) {
             this.win = false;
@@ -163,7 +167,7 @@ Game.prototype.draw = function() {
             this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.WIN_COLOR);
         }
         this.drawStatus();
-        this.leaders.draw(this.ctx);
+        this.leaders.draw(this.ctx, this.difficulty());
         if (this.replay) {
             this.foot.write(this.ctx, Game.PLAY_FONT, Game.REPLAY_TEXT);
         }

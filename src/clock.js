@@ -60,8 +60,8 @@ Clock.prototype.update = function(world, next) {
     this.time = next;
 }
 
-Clock.prototype.finish = function(leaders) {
-    leaders.insert(this.ticks);
+Clock.prototype.finish = function(leaders, difficulty) {
+    leaders.insert(this.ticks, difficulty);
     return leaders.ordinal() || Clock.format(this.ticks, true);
 }
 
