@@ -43,22 +43,31 @@ body {
     margin: auto 0;
 }
 
+#buttons .message {
+    visibility: hidden;
+}
+
 #confirm {
     margin-right: auto;
-    visibility: hidden;
+}
+
+#confirm.highlight > * {
     color: lime;
+    border-color: lime;
+    visibility: visible;
 }
 
 label {
     padding-right: .5ex;
 }
 
-select {
+button, select {
     background: transparent;
     color: white;
     font-size: 18px;
-    border-radius: 4px;
     padding: 3px;
+    border: solid white 1px;
+    border-radius: 4px;
 }
 
 select>option {

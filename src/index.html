@@ -15,11 +15,10 @@
             <path d="M 30,18 a 14 14 0 1 1 -4.1,-11.9" stroke="#FFF" stroke-width="4" fill-opacity="0"/>
             <polygon points="32,12 31,1 21,11" fill="#FFF"/>
           </svg>
-          <svg id="reset" width="50px" height="26px" fill="#FFF" stroke="#FFF" xmlns="http://www.w3.org/2000/svg" version="1.1">
-            <rect x="1" width="48" height="24" rx="4" stroke-width="2" fill="#000"/>
-            <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle">reset</text>
-          </svg>
-          <div id="confirm">&larr; click again to confirm reset</div>
+          <div id="confirm">
+            <button id="reset" type="button">reset</button>
+            <span class="message">&larr; click again to confirm reset</span>
+          </div>
           <div>
             <label for="difficulty">difficulty:</label>
             <select id="difficulty">

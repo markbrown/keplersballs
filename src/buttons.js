@@ -6,7 +6,7 @@ export default function Buttons(game) {
     this.game = game;
     this.container = document.getElementById("container");
     this.buttons = document.getElementById("buttons");
-    this.confirmMessage = document.getElementById("confirm");
+    this.confirmItem = document.getElementById("confirm");
     this.fullscreen = null;
     this.idleTimer = null;
     this.ignoreMove = false;
@@ -43,7 +43,6 @@ export default function Buttons(game) {
 Buttons.MOUSE_TIMEOUT = 1000;
 Buttons.COLOR_ON = "#fff";
 Buttons.COLOR_OFF = "#444";
-Buttons.COLOR_CONFIRM = "lime";
 
 Buttons.prototype.mouseover = function() {
     if (!document.fullscreenElement) {
@@ -90,21 +89,17 @@ Buttons.prototype.doReset = function(ev) {
     }
 }
 
-Buttons.prototype.hideConfirm = function() {
-    if (this.confirmReset) {
-        this.confirmReset = false;
-        this.confirmMessage.style.visibility = "hidden";
-        let style = this.reset.style;
-        style.fill = style.stroke = Buttons.COLOR_ON;
-    }
-}
-
 Buttons.prototype.showConfirm = function() {
     if (!this.confirmReset) {
         this.confirmReset = true;
-        this.confirmMessage.style.visibility = "visible";
-        let style = this.reset.style;
-        style.fill = style.stroke = Buttons.COLOR_CONFIRM;
+        this.confirmItem.classList.add("highlight");
+    }
+}
+
+Buttons.prototype.hideConfirm = function() {
+    if (this.confirmReset) {
+        this.confirmReset = false;
+        this.confirmItem.classList.remove("highlight");
     }
 }
 
