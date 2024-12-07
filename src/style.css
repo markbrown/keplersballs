@@ -1,3 +1,13 @@
+@font-face {
+    font-family: "Philosopher";
+    src: url("../fonts/Philosopher-Regular.ttf");
+}
+
+@font-face {
+    font-family: "League Spartan";
+    src: url("../fonts/LeagueSpartan-Regular.ttf");
+}
+
 body {
     margin: 0;
     direction: ltr;
@@ -22,6 +32,7 @@ body {
     position: absolute;
     width: 100vw;
     max-width: max(177.78vh, 1280px);
+    font: 18pt Philosopher, sans-serif;
 }
 
 #buttons {
@@ -35,8 +46,6 @@ body {
     left: 16px;
     right: 16px;
     color: #bbb;
-    font-family: sans-serif;
-    font-size: 18px;
 }
 
 #buttons > * {
@@ -64,10 +73,10 @@ label {
 button, select {
     background: transparent;
     color: white;
-    font-size: 18px;
-    padding: 3px;
+    padding-bottom: 1.5px;
     border: solid white 1px;
     border-radius: 4px;
+    font: 18pt Philosopher, sans-serif;
 }
 
 select>option {
@@ -87,7 +96,7 @@ select>option {
 #helpscroll {
     margin-top: 1000px;
     color: #bbb;
-    font: 18px sans-serif;
+    font: 16pt Philosopher, sans-serif;
 }
 
 #helpscroll > :first-child {

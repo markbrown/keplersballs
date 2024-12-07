@@ -70,10 +70,10 @@ Game.LOSE_TEXT = "GAME OVER";
 Game.PLAY_TEXT = "press any key to play";
 Game.REPLAY_TEXT = "press any key to play again";
 
-Game.TITLE_FONT = "100px sans-serif";
-Game.RESULT_FONT = "80px sans-serif";
-Game.CLOCK_FONT = "20px sans-serif";
-Game.PLAY_FONT = "28px sans-serif";
+Game.TITLE_FONT = "80pt Philosopher, sans-serif";
+Game.PLAY_FONT = "28pt Philosopher, sans-serif";
+Game.RESULT_FONT = "60pt Philosopher, sans-serif";
+Game.CLOCK_FONT = "20pt 'League Spartan', sans-serif";
 
 Game.prototype.difficulty = function() {
     return this.buttons.difficulty.value;

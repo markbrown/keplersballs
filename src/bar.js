@@ -13,7 +13,7 @@ Bar.WIDTH = 240;
 Bar.HEIGHT = 12;
 Bar.OFFSET = 316;
 Bar.TITLE_OFFSET = 340;
-Bar.TITLE_FONT = "16px sans-serif";
+Bar.TITLE_FONT = "16pt Philosopher, sans-serif";
 Bar.TITLE_COLOR = "#ccc";
 
 Bar.prototype.draw = function(ctx, frac = 0) {

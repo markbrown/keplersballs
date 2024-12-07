@@ -11,7 +11,7 @@ export default function Leaders(name = "keplersballs") {
     this.setup();
 }
 
-Leaders.FONT = "24px sans-serif";
+Leaders.FONT = "24pt 'League Spartan', sans-serif";
 Leaders.ROWS = 6;
 Leaders.COLS = 2;
 Leaders.LINE_TOP = 80;

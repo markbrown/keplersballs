@@ -19,7 +19,7 @@ export default function Roid(params, path, size) {
     this.radius = info.radius;
     let varhp = Math.floor(info.varhp * Math.random());
     this.hp = params.roidBaseHP + info.minhp + varhp;
-    this.font = info.font;
+    this.font = `${info.fontsize} ${Roid.FONT_FAMILY}`;
     this.offset = info.offset;
 }
 
@@ -27,6 +27,7 @@ Roid.LOSS_FACTOR = 0.8;
 Roid.FUZZ_FACTOR = 0.15;
 Roid.SPEED_CAP = 0.99;
 Roid.DEBRIS = 9;
+Roid.FONT_FAMILY = "'League Spartan', sans-serif";
 
 Roid.colors = [
     "IndianRed", "PaleVioletRed", "Tomato", "Orchid", "DarkKhaki",
@@ -36,10 +37,10 @@ Roid.colors = [
 
 // information for each roid size
 Roid.info = [
-    {radius: 12, minhp: 5, varhp: 8, font: "18px sans-serif", offset: 1.2},
-    {radius: 18, minhp: 7, varhp: 10, font: "24px sans-serif", offset: 1.4},
-    {radius: 24, minhp: 11, varhp: 12, font: "30px sans-serif", offset: 1},
-    {radius: 30, minhp: 14, varhp: 12, font: "38px sans-serif", offset: 2},
+    {radius: 12, minhp: 5, varhp: 8, fontsize: "16pt", offset: 1.4},
+    {radius: 18, minhp: 7, varhp: 10, fontsize: "20pt", offset: 1.4},
+    {radius: 24, minhp: 11, varhp: 12, fontsize: "24pt", offset: 2.2},
+    {radius: 30, minhp: 14, varhp: 12, fontsize: "30pt", offset: 2},
 ];
 
 Roid.prototype.pos = function() {

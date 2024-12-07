@@ -6,8 +6,6 @@ export default function Help() {
 
     // about
     this.helpscroll = document.getElementById("helpscroll");
-    this.viewheight = this.helpscroll.offsetParent.offsetHeight;
-    this.helpheight = this.helpscroll.offsetHeight;
 }
 
 Help.lines = [
@@ -19,7 +17,7 @@ Help.lines = [
     {name: "Trigger lock:", controls: "enter"},
 ];
 
-Help.FONT = "24px sans-serif";
+Help.FONT = "22pt Philosopher, sans-serif";
 Help.SCROLL_START = 100;
 Help.SCROLL_RATE = 16;
 Help.LINEHEIGHT = 36;
@@ -38,8 +36,10 @@ Help.prototype.show = function() {
 }
 
 Help.prototype.scroll = function(time) {
-    let start = this.viewheight - Help.SCROLL_START;
-    let max = this.helpheight + this.viewheight;
+    let viewheight = this.helpscroll.offsetParent.offsetHeight;
+    let helpheight = this.helpscroll.offsetHeight;
+    let start = viewheight - Help.SCROLL_START;
+    let max = helpheight + viewheight;
     let scroll = Math.min(max, time * Help.SCROLL_RATE / 1000);
     this.helpscroll.style.marginTop = `${start - scroll}px`;
 }
