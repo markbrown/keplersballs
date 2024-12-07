@@ -6,9 +6,12 @@ import Vec from "./vec.js";
 
 const TAU = 2 * Math.PI;
 
-export default function Ship(controls, mu, path, heading = TAU / 4) {
+export default function Ship(params, controls, path, heading = TAU / 4) {
     this.controls = controls;
-    this.mu = mu;
+    this.mu = params.mu;
+    this.accel = params.shipThrust;
+    this.dissipationMin = params.shipDissipationMin;
+    this.dissipationVar = params.shipDissipationVar;
     this.heading = heading;
 
     // rate of turn
@@ -27,10 +30,7 @@ Ship.LIVE_COLOR = "lime";
 Ship.DEAD_COLOR = "SlateGrey";
 Ship.SIZE = 5;
 Ship.ABSORPTION = 100;
-Ship.DISSIPATION_MIN = 15e-3;
-Ship.DISSIPATION_VAR = 7e-3;
-Ship.THRUST_ACCEL = 16;
-Ship.RETRO_ACCEL = 12;
+Ship.RETRO_FACTOR = 0.75;
 Ship.SPEED_CAP = 0.99;
 Ship.LOW_SIGNAL_LEVEL = 1000;
 Ship.CRASH_SLOWDOWN = 10;
@@ -92,16 +92,16 @@ Ship.prototype.advance = function(dt) {
 
         // thrust
         if (this.controls.forward()) {
-            this.thrust(ds * Ship.THRUST_ACCEL);
+            this.thrust(ds * this.accel);
         } else if (this.controls.backward()) {
-            this.thrust(-ds * Ship.RETRO_ACCEL);
+            this.thrust(-ds * this.accel * Ship.RETRO_FACTOR);
         }
     } else {
         this.heading += this.deadturn * ds;
     }
 
     let sunlight = Ship.ABSORPTION / this.pos().sqr();
-    let cooling = Ship.DISSIPATION_MIN + this.heat * Ship.DISSIPATION_VAR;
+    let cooling = this.dissipationMin + this.heat * this.dissipationVar;
     let heat = this.heat + ds * (sunlight - cooling);
     this.heat = Math.max(0, Math.min(2, heat));
 

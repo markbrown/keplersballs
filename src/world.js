@@ -22,7 +22,7 @@ function World(params, controls, audio) {
 
     // ship
     let path = this.circle(params.shipRadius);
-    this.ship = new Ship(controls, this.mu, path);
+    this.ship = new Ship(params, controls, path);
 
     // bullets currently in flight
     this.bullets = [];
@@ -50,7 +50,7 @@ World.prototype.circle = function(radius, theta = 0) {
 World.prototype.addRoid = function(params) {
     let radius = params.roidMin + Math.random() * params.roidVar;
     let path = this.circle(radius, Math.random() * TAU);
-    this.roids.push(new Roid(this.mu, path, params.roidSize));
+    this.roids.push(new Roid(params, path, params.roidSize));
     this.total += 2 ** (params.roidSize + 1) - 1;
 }
 

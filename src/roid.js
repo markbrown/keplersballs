@@ -3,20 +3,22 @@ import Orbit from "./orbit.js";
 import Path from "./path.js";
 import Vec from "./vec.js";
 
-export default function Roid(mu, path, size = Roid.info.length - 1) {
+export default function Roid(params, path, size) {
+    this.params = params;
     this.size = size;
     this.color = Roid.colors[Math.floor(Math.random() * Roid.colors.length)];
 
     // determine orbit
     path = path.copy();
     path.impulse(Vec.fuzz(path.speed() * Roid.FUZZ_FACTOR));
-    path.cap(Math.sqrt(2 * mu / path.altitude()) * Roid.SPEED_CAP);
-    this.orbit = new Orbit(mu, path);
+    path.cap(Math.sqrt(2 * params.mu / path.altitude()) * Roid.SPEED_CAP);
+    this.orbit = new Orbit(params.mu, path);
 
     // size-dependant attributes
     let info = Roid.info[this.size];
     this.radius = info.radius;
-    this.hp = info.minhp + Math.floor(info.varhp * Math.random());
+    let varhp = Math.floor(info.varhp * Math.random());
+    this.hp = params.roidBaseHP + info.minhp + varhp;
     this.font = info.font;
     this.offset = info.offset;
 }
@@ -76,14 +78,14 @@ Roid.prototype.smash = function(hits, roids, effects, audio) {
         }
         let result = 1;
         if (this.size > 0) {
-            let mu = this.orbit.mu;
+            let params = this.params;
             let size = this.size - 1;
             let pos = this.pos();
             let side = pos.unit().scale(this.radius / 3);
             let vel = this.vel().scale(Roid.LOSS_FACTOR);
             // create remnants
-            let r1 = new Roid(mu, new Path(pos.plus(side), vel), size);
-            let r2 = new Roid(mu, new Path(pos.minus(side), vel), size);
+            let r1 = new Roid(params, new Path(pos.plus(side), vel), size);
+            let r2 = new Roid(params, new Path(pos.minus(side), vel), size);
             // keep doing damage
             let excess = hits - this.hp;
             let hits1 = Math.floor(excess * Math.random());

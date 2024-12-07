@@ -23,8 +23,8 @@ Bullet.RADIUS = 1.6;
 
 Bullet.criticals = [
     // speed thresholds must be decreasing in this list
-    {speed: 450, color: "cyan", life: 2200, minhp: 16, varhp: 25},
-    {speed: 380, color: "yellow", life: 1500, minhp: 8, varhp: 14},
+    {speed: 450, color: "cyan", life: 2200, minhp: 20, varhp: 25},
+    {speed: 380, color: "yellow", life: 1500, minhp: 9, varhp: 14},
     {speed: 330, color: "red", life: 1200, minhp: 4, varhp: 6},
     {speed: 0, color: "white", life: 1000, minhp: 1, varhp: 0},
 ];
