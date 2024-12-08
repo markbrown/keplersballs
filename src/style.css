@@ -30,9 +30,12 @@ body {
 
 #overlay {
     position: absolute;
+    height: 100vh;
+    min-height: 720px;
     width: 100vw;
     max-width: max(177.78vh, 1280px);
-    font: 18pt Philosopher, sans-serif;
+    font-family: Philosopher, sans-serif;
+    color: #bbb;
 }
 
 #buttons {
@@ -45,7 +48,7 @@ body {
     top: 16px;
     left: 16px;
     right: 16px;
-    color: #bbb;
+    font-size: 18pt;
 }
 
 #buttons > * {
@@ -83,26 +86,56 @@ select>option {
     background: black;
 }
 
-.help {
+#help {
     position: absolute;
-    overflow: hidden;
     top: 25%;
-    right: calc(50% + 128px);
-    width: 450px;
     height: 50%;
+    width: 100%;
     background: transparent;
 }
 
-#helpscroll {
+#help > * {
+    position: absolute;
+    top: 0;
+    width: 450px;
+    height: 100%;
+}
+
+#commands {
+    left: calc(50% + 140px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    row-gap: 20px;
+    font-size: 24pt;
+}
+
+#commands > * {
+    display: flex;
+}
+
+#commands > * > :first-child {
+    width: 300px;
+}
+
+#commands > * > :last-child {
+    margin: auto;
+}
+
+#about-container {
+    overflow: hidden;
+    right: calc(50% + 128px);
+}
+
+#about {
     margin-top: 1000px;
-    color: #bbb;
     font: 16pt Philosopher, sans-serif;
 }
 
-#helpscroll > :first-child {
+#about > :first-child {
     margin-top: 0;
 }
 
-#helpscroll > h2 {
+#about > h2 {
     color: #ddd;
 }

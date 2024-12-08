@@ -150,7 +150,6 @@ Game.prototype.draw = function() {
         this.head.write(this.ctx, Game.TITLE_FONT, Game.TITLE_TEXT);
         this.foot.write(this.ctx, Game.PLAY_FONT, Game.PLAY_TEXT);
         this.help.scroll(this.clock.time);
-        this.help.draw(this.ctx);
     } else if (this.running) {
         // time
         let text = this.clock.current;
