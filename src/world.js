@@ -118,6 +118,10 @@ World.prototype.checkShip = function() {
     }
 }
 
+World.prototype.signal = function() {
+    return this.ship ? this.ship.pos().sqr() : 0;
+}
+
 World.prototype.shipHeat = function() {
     return this.ship ? Math.min(1, this.ship.heat) : 0;
 }

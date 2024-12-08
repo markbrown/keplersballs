@@ -106,7 +106,7 @@ select>option {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    row-gap: 20px;
+    row-gap: 16px;
     font-size: 24pt;
 }
 

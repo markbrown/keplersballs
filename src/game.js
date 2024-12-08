@@ -46,6 +46,7 @@ export default function Game() {
     // status bars
     this.progress = new Bar(0, "progress", Game.PROGRESS_COLOR);
     this.heat = new Bar(1, "temperature", Game.HEAT_COLOR);
+    this.range = Game.WIDTH ** 2 + Game.HEIGHT ** 2;
 
     // press any key to start
     addEventListener("keydown", (ev) => this.hitkey(ev));
@@ -63,17 +64,20 @@ Game.CLOCK_COLOR = "DarkOrange";
 Game.WIN_COLOR = "#ccc";
 Game.PROGRESS_COLOR = "RoyalBlue";
 Game.HEAT_COLOR = "Crimson";
+Game.WARNING_COLOR = "Crimson";
 
 Game.TITLE_TEXT = "KEPLER'S BALLS";
 Game.WIN_TEXT = "YOU WIN!";
 Game.LOSE_TEXT = "GAME OVER";
 Game.PLAY_TEXT = "press any key to play";
 Game.REPLAY_TEXT = "press any key to play again";
+Game.WARNING_TEXT = "LOW SIGNAL WARNING";
 
 Game.TITLE_FONT = "80pt Philosopher, sans-serif";
 Game.PLAY_FONT = "28pt Philosopher, sans-serif";
 Game.RESULT_FONT = "60pt Philosopher, sans-serif";
 Game.CLOCK_FONT = "20pt 'League Spartan', sans-serif";
+Game.WARNING_FONT = "60pt 'League Spartan', sans-serif";
 
 Game.prototype.difficulty = function() {
     return this.buttons.difficulty.value;
@@ -117,7 +121,7 @@ Game.prototype.reload = function() {
 Game.prototype.run = function() {
     this.clock.frame(this.world);
 
-    // detect win
+    // detect end of game
     if (this.running) {
         if (this.world.finished()) {
             this.audio.win();
@@ -127,6 +131,10 @@ Game.prototype.run = function() {
         } else if (!this.controls.enabled) {
             this.win = false;
             this.result = this.world.shipDeath();
+            this.finish();
+        } else if (this.world.signal() > this.range) {
+            this.win = false;
+            this.result = "ship lost";
             this.finish();
         }
     }
@@ -155,6 +163,12 @@ Game.prototype.draw = function() {
         let text = this.clock.current;
         this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.CLOCK_COLOR);
         this.drawStatus();
+
+        // low signal warning
+        if (this.world.signal() > this.range / 4 && Date.now() % 800 < 400) {
+            Vec().write(this.ctx, Game.WARNING_FONT, Game.WARNING_TEXT, 0,
+                Game.WARNING_COLOR);
+        }
     } else {
         if (this.win) {
             this.head.write(this.ctx, Game.RESULT_FONT, Game.WIN_TEXT);
