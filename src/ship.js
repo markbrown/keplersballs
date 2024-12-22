@@ -118,8 +118,7 @@ Ship.prototype.advance = function(dt) {
 Ship.prototype.fried = function(radius, audio) {
     if (this.orbit.complete() && this.near(radius)) {
         if (this.alive()) {
-            // ship hits the sun
-            this.die("ship overheated");
+            this.die("you crashed into the sun");
         } else {
             return true;
         }
@@ -146,7 +145,7 @@ Ship.prototype.thrust = function(dv) {
 Ship.prototype.crash = function(audio) {
     if (this.alive()) {
         audio.crash();
-        this.die("ship crashed");
+        this.die("you crashed");
 
         // fall into the sun
         let path = this.orbit.path;
