@@ -19,6 +19,7 @@ export default function Buttons(game) {
     this.reset.addEventListener("click", (ev) => this.doReset(ev));
 
     this.difficulty = document.getElementById("difficulty");
+    this.difficulty.addEventListener("change", () => this.difficultyChange());
     this.difficulty.addEventListener("focus", () => this.hideConfirm());
 
     this.quavers = document.getElementById("quavers");
@@ -141,6 +142,10 @@ Buttons.prototype.fullscreenChange = function() {
         this.fullscreen.src = Expand;
         this.container.style.cursor = "";
     }
+}
+
+Buttons.prototype.difficultyChange = function() {
+    this.game.result = null;
 }
 
 // vi: set ai sw=4 ts=8 sts=4 et ai :

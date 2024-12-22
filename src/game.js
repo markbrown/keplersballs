@@ -175,10 +175,8 @@ Game.prototype.draw = function() {
         } else {
             this.head.write(this.ctx, Game.RESULT_FONT, Game.LOSE_TEXT);
         }
-        if (this.result) {
-            let text = this.result;
-            this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.WIN_COLOR);
-        }
+        let text = this.result || `difficulty: ${this.difficulty()}`;
+        this.sub.write(this.ctx, Game.CLOCK_FONT, text, 0, Game.WIN_COLOR);
         this.drawStatus();
         this.leaders.draw(this.ctx, this.difficulty());
         if (this.replay) {
