@@ -20,9 +20,11 @@ export default function Ship(params, controls, path, heading = TAU / 4) {
     this.deadturn = 0;
 
     // ship state
+    this.pilot = null;
     this.death = "";
     this.color = Ship.LIVE_COLOR;
     this.heat = 0;
+    this.moved = false;
     this.orbit = new Orbit(this.mu, path);
 }
 
@@ -70,6 +72,8 @@ Ship.prototype.tick = function(ticks, bullets, effects) {
         if (this.controls.trigger()) {
             bullets.push(new Bullet(this.orbit.path, this.heading));
         }
+    } else if (this.pilot) {
+        this.pilot.tick(ticks, effects);
     }
 }
 
@@ -96,6 +100,8 @@ Ship.prototype.advance = function(dt) {
         } else if (this.controls.backward()) {
             this.thrust(-ds * this.accel * Ship.RETRO_FACTOR);
         }
+    } else if (this.pilot) {
+        this.pilot.advance(ds);
     } else {
         this.heading += this.deadturn * ds;
     }
@@ -133,6 +139,7 @@ Ship.prototype.near = function(radius) {
 Ship.prototype.thrust = function(dv) {
     let path = this.orbit.path;
     path.impulse(this.ahead(dv));
+    this.moved = true;
 
     // ensure ship stays below escape velocity
     path.cap(Math.sqrt(2 * this.mu / path.altitude()) * Ship.SPEED_CAP);
@@ -156,6 +163,7 @@ Ship.prototype.crash = function(audio) {
 
 Ship.prototype.die = function(death) {
     this.death = death;
+    this.moved = false;
     this.controls.enabled = false;
     this.color = Ship.DEAD_COLOR;
     this.deadturn = (0.5 - Math.random()) * Turn.RATE;
@@ -167,7 +175,7 @@ Ship.prototype.draw = function(ctx) {
         return;
     }
 
-    if (this.alive()) {
+    if (this.alive() || this.pilot) {
         this.orbit.draw(ctx);
     }
 
@@ -176,18 +184,19 @@ Ship.prototype.draw = function(ctx) {
     ctx.translate(pos.x, pos.y);
     ctx.rotate(this.heading);
     // draw flames
-    if (this.alive()) {
+    if (this.moved) {
         let inner = Ship.FLAME_SIZE * Math.random();
         let outer = inner + Ship.FLAME_SIZE * Math.random();
-        if (this.controls.forward()) {
-            this.drawThrust(ctx, outer, Ship.OUTER_FLAME_COLOR);
-            this.drawThrust(ctx, inner, Ship.INNER_FLAME_COLOR);
-        } else if (this.controls.backward()) {
+        if (this.controls.backward()) {
             this.drawRetro(ctx, -1, outer / 2, Ship.OUTER_FLAME_COLOR);
             this.drawRetro(ctx, -1, inner / 2, Ship.INNER_FLAME_COLOR);
             this.drawRetro(ctx, 1, outer / 2, Ship.OUTER_FLAME_COLOR);
             this.drawRetro(ctx, 1, inner / 2, Ship.INNER_FLAME_COLOR);
+        } else {
+            this.drawThrust(ctx, outer, Ship.OUTER_FLAME_COLOR);
+            this.drawThrust(ctx, inner, Ship.INNER_FLAME_COLOR);
         }
+        this.moved = false;
     }
     // draw a spaceship pointing right
     ctx.fillStyle = this.color;
@@ -207,6 +216,8 @@ Ship.prototype.draw = function(ctx) {
     ctx.lineTo(6, -2);
     ctx.fill();
     ctx.restore();
+
+    // this.pilot && this.pilot.draw(ctx);
 }
 
 Ship.prototype.drawThrust = function(ctx, size, color) {

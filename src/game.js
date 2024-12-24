@@ -123,10 +123,11 @@ Game.prototype.run = function() {
 
     // detect end of game
     if (this.running) {
-        if (this.world.finished()) {
+        if (this.world.completed()) {
             this.audio.win();
             this.win = true;
             this.result = this.clock.finish(this.leaders, this.difficulty());
+            this.world.park();
             this.finish();
         } else if (!this.controls.enabled) {
             this.win = false;

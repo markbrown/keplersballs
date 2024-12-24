@@ -1,4 +1,5 @@
 import Path from "./path.js";
+import Pilot from "./pilot.js";
 import Roid from "./roid.js";
 import Ship from "./ship.js";
 import Vec from "./vec.js";
@@ -21,8 +22,8 @@ function World(params, controls, audio) {
     this.mu = params.mu;
 
     // ship
-    let path = this.circle(params.shipRadius);
-    this.ship = new Ship(params, controls, path);
+    this.home = params.shipRadius;
+    this.ship = new Ship(params, controls, this.circle(this.home));
 
     // bullets currently in flight
     this.bullets = [];
@@ -55,8 +56,13 @@ World.prototype.addRoid = function(params) {
 }
 
 // check if all roids are destroyed
-World.prototype.finished = function() {
+World.prototype.completed = function() {
     return this.roids.length == 0;
+}
+
+// give the ship an autopilot to return to the home orbit
+World.prototype.park = function() {
+    this.ship.pilot = new Pilot(this.ship, this.home);
 }
 
 // perform actions at regular intervals

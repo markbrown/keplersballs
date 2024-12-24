@@ -62,6 +62,11 @@ Vec.prototype.rotate = function(theta) {
     return Vec(this.x * cos - this.y * sin, this.x * sin + this.y * cos);
 }
 
+Vec.prototype.theta = function() {
+    let theta = Math.atan2(this.y, this.x);
+    return (theta < 0) ? theta + TAU : theta;
+}
+
 Vec.prototype.moveTo = function(ctx) {
     ctx.moveTo(this.x, this.y);
 }

@@ -9,19 +9,19 @@ export default function Orbit(mu, path) {
     this.periapsis = false;
 
     // specific angular momentum
-    let h = path.pos.cross2d(path.vel);
+    this.h = path.pos.cross2d(path.vel);
 
     // eccentricity
-    let eVector = path.vel.crossZ(h / mu).minus(path.pos.unit());
+    let eVector = path.vel.crossZ(this.h / mu).minus(path.pos.unit());
     this.e = eVector.len();
     let fSqr = 1 - this.e ** 2;
 
     // semi-latus rectum
-    let r = h ** 2 / mu;
+    this.p = this.h ** 2 / mu;
 
     // semi-major axis, semi-minor axis
-    this.a = r / fSqr;
-    this.b = Math.sign(h) * r / Math.sqrt(fSqr);
+    this.a = this.p / fSqr;
+    this.b = Math.sign(this.h) * this.p / Math.sqrt(fSqr);
     if (this.e < 1e-6) {
         // too close to a circle so we choose an arbitrary periapsis
         this.major = Vec(this.a, 0);
