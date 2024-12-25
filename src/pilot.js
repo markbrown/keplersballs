@@ -9,7 +9,7 @@ export default function Pilot(ship, home) {
     this.parked = false;
 }
 
-Pilot.TURN_RATE = TAU;
+Pilot.TURN_RATE = Math.PI;
 Pilot.THRUST = 12;
 Pilot.MIN_RADIUS = 10;
 Pilot.FAR_MULTIPLIER = 4;
@@ -30,52 +30,44 @@ Pilot.prototype.done = function() {
 
 Pilot.prototype.advance = function(ds) {
     if (this.parked) {
-        this.steer(Math.PI / 2, ds, false);
+        this.steer(Math.PI / 2, false, ds);
     } else if (this.done()) {
         this.parked = true;
         this.plan = "parked";
     } else {
         let pos = this.ship.pos();
         let orbit = this.ship.orbit;
+        let ra = pos.dot(orbit.major);
+        let rb = pos.dot(orbit.minor);
         this.plan = this.action();
         switch (this.plan) {
             case "expand":
-                if (pos.dot(orbit.major) > 0) {
-                    this.aim(1, ds);
-                }
+                this.aim(1, ra > 0, ds);
                 break;
             case "contract":
-                if (pos.dot(orbit.major) > 0) {
-                    this.aim(-1, ds);
-                } else if (pos.dot(orbit.minor) > 0) {
-                    this.aim(1, ds);
+                if (ra > 0) {
+                    this.aim(-1, true, ds);
+                } else {
+                    this.aim(1, rb > 0, ds);
                 }
                 break;
             case "start flip":
-                if (pos.dot(orbit.major) < 0 && pos.dot(orbit.minor) > 0) {
-                    this.aim(1, ds);
-                }
+                this.aim(1, ra < 0 && rb > 0, ds);
                 break;
             case "build flip":
-                if (pos.dot(orbit.major) < 0) {
-                    this.aim(1, ds);
-                }
+                this.aim(1, ra < 0, ds);
                 break;
             case "flip":
-                this.aim(1, ds);
+                this.aim(1, true, ds);
                 break;
             case "recover":
-                if (pos.dot(orbit.minor) < 0) {
-                    this.aim(-1, ds);
-                }
+                this.aim(-1, rb < 0, ds);
                 break;
             case "scramble":
-                this.aim(-1, ds);
+                this.aim(-1, true, ds);
                 break;
             case "yikes":
-                if (pos.dot(orbit.major) < 0) {
-                    this.aim(-1, ds);
-                }
+                this.aim(-1, ra < 0, ds);
                 break;
         }
     }
@@ -125,12 +117,12 @@ Pilot.prototype.action = function() {
     }
 }
 
-Pilot.prototype.aim = function(sense, ds) {
+Pilot.prototype.aim = function(sense, throttle, ds) {
     let theta = this.ship.orbit.minor.scale(sense).theta();
-    this.steer(theta, ds, true);
+    this.steer(theta, throttle, ds);
 }
 
-Pilot.prototype.steer = function(theta, ds, move) {
+Pilot.prototype.steer = function(theta, throttle, ds) {
     let rot = theta - this.ship.heading;
     if (rot > Math.PI) {
         rot -= TAU;
@@ -142,7 +134,7 @@ Pilot.prototype.steer = function(theta, ds, move) {
         this.ship.heading += Math.sign(rot) * turn;
     } else {
         this.ship.heading = theta;
-        move && this.ship.thrust(ds * Pilot.THRUST);
+        throttle && this.ship.thrust(ds * Pilot.THRUST);
     }
 }
 
